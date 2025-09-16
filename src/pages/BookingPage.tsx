@@ -575,7 +575,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
 
                     {/* WhatsApp Link */}
                     <a
-                      href={`https://wa.me/923218203904?text=${encodeURIComponent(
+                      href={`https://wa.me/+966559572454?text=${encodeURIComponent(
                         "Assalamu Alaikum, I'd like to inquire about your pilgrimage transport services."
                       )}`}
                       target="_blank"
@@ -586,7 +586,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
                       <div>
                         <p className="font-medium group-hover:text-green-600 transition-colors">WhatsApp</p>
                         <p className="text-sm text-muted-foreground group-hover:text-green-500 transition-colors">
-                          +923218203904
+                          +966559572454
                         </p>
                       </div>
                     </a>
