@@ -1,0 +1,11 @@
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+npm init -y
+
+"scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  }
+
+npm install express
+npm install --save-dev nodemon
+npm run dev
