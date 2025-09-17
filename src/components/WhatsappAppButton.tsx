@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 const WhatsAppButton = () => {
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("Assalamu Alaikum, I'd like to inquire about your pilgrimage transport services.");
-    const phoneNumber = "+966559572454"; 
-    const whatsappURL = `https://wa.me/${phoneNumber}?text=${message}`; // Fixed: removed space after /wa.me/
+    const phoneNumber = "+966559572454";
+    const whatsappURL = `https://wa.me/${phoneNumber}?text=${message}`;
     window.open(whatsappURL, '_blank');
   };
 
@@ -15,9 +15,9 @@ const WhatsAppButton = () => {
       size="icon"
     >
       <img 
-        src="/social1.png" 
+        src="/social2.png" 
         alt="WhatsApp" 
-        className="w-6 h-6" 
+        className="w-6 h-6"
       />
     </Button>
   );
