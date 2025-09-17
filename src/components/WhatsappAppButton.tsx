@@ -15,7 +15,7 @@ const WhatsAppButton = () => {
       size="icon"
     >
       <img 
-        src="/social.png" 
+        src="/social1.png" 
         alt="WhatsApp" 
         className="w-6 h-6" 
       />
