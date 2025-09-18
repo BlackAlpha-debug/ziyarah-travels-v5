@@ -40,11 +40,11 @@ const ContactPage = () => {
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
     });
 
-    // Coordinates for Hafeez Center, Lahore, Pakistan
-    const hafeezCenterLatLng: [number, number] = [31.4747, 74.3320];
+    // Updated Coordinates for Hafeez Center, Lahore, Pakistan
+    const hafeezCenterLatLng: [number, number] = [31.5161, 74.3434];
 
     // Initialize the map
-    const map = L.map('map').setView(hafeezCenterLatLng, 16);
+    const map = L.map('map').setView(hafeezCenterLatLng, 17);
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -62,6 +62,9 @@ const ContactPage = () => {
       map.remove();
     };
   }, []);
+
+  // Reusable contact button style
+  const contactButtonClass = "font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-md p-1 transition-all";
 
   return (
     <main className="min-h-screen">
@@ -85,45 +88,49 @@ const ContactPage = () => {
       <section className="py-20 px-6 bg-neutral-50">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-            <Card className="text-center border-0 shadow-soft hover:shadow-elegant transition-all duration-300">
+            {/* PHONE — Blue Shade */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-blue-50 hover:bg-blue-100">
               <CardContent className="p-6">
-                <Phone className="w-12 h-12 text-gold mx-auto mb-4" />
+                <Phone className="w-12 h-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">Phone</h3>
                 <p className="text-muted-foreground text-sm mb-3">Call us directly</p>
-                <a href="tel:+966559572454" className="text-gold hover:underline font-medium">
-                  +966559572454
+                <a href="tel:+966559572454" className={`${contactButtonClass} text-blue-600`}>
+                  +966 55 957 2454
                 </a>
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-soft hover:shadow-elegant transition-all duration-300">
+            {/* WHATSAPP — Green Shade */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-green-50 hover:bg-green-100">
               <CardContent className="p-6">
-                <MessageCircle className="w-12 h-12 text-gold mx-auto mb-4" />
+                <MessageCircle className="w-12 h-12 text-green-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">WhatsApp</h3>
                 <p className="text-muted-foreground text-sm mb-3">Quick messaging</p>
-                <a href="https://wa.me/+966559572454" className="text-gold hover:underline font-medium" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/966559572454" className={`${contactButtonClass} text-green-600`} target="_blank" rel="noopener noreferrer">
                   Message Us
                 </a>
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-soft hover:shadow-elegant transition-all duration-300">
+            {/* EMAIL — Purple Shade */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-purple-50 hover:bg-purple-100">
               <CardContent className="p-6">
-                <Mail className="w-12 h-12 text-gold mx-auto mb-4" />
+                <Mail className="w-12 h-12 text-purple-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">Email</h3>
                 <p className="text-muted-foreground text-sm mb-3">Send us details</p>
-                <a href="mailto:ziyarahtravels.sales@gmail.com" className="text-gold hover:underline font-medium">
-                  info@sacredjourney.sa
+                <a href="mailto:Ziarahtarvels.info@gmail.com" className={`${contactButtonClass} text-purple-600`}>
+                  Ziarahtarvels.info@gmail.com
                 </a>
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-soft hover:shadow-elegant transition-all duration-300">
+            {/* LOCATION — Amber/Orange Shade */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-amber-50 hover:bg-amber-100">
               <CardContent className="p-6">
-                <MapPin className="w-12 h-12 text-gold mx-auto mb-4" />
+                <MapPin className="w-12 h-12 text-amber-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">Location</h3>
                 <p className="text-muted-foreground text-sm mb-3">Visit our office</p>
-                <p className="text-gold font-medium text-sm">
+                <p className="text-amber-600 font-medium text-sm">
                   Makkah, Saudi Arabia
                 </p>
               </CardContent>
@@ -132,7 +139,7 @@ const ContactPage = () => {
 
           {/* Contact Form and Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
+            {/* LEFT COLUMN: Contact Form Only (Quick Actions Removed) */}
             <div>
               {isSubmitted ? (
                 <Card className="border-0 shadow-elegant">
@@ -227,9 +234,9 @@ const ContactPage = () => {
               )}
             </div>
 
-            {/* Map and Business Hours */}
+            {/* RIGHT COLUMN: Map and Business Hours */}
             <div className="space-y-8">
-              {/* Map - Now with Leaflet */}
+              {/* Map */}
               <Card className="border-0 shadow-elegant">
                 <CardContent className="p-0">
                   <div id="map" className="h-80 w-full rounded-lg" style={{ zIndex: 0 }}></div>
@@ -256,31 +263,6 @@ const ContactPage = () => {
                       <span className="font-medium">Emergency Support</span>
                       <span className="text-gold font-medium">24/7 Available</span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card className="border-0 shadow-elegant">
-                <CardContent className="p-8">
-                  <h3 className="text-2xl font-bold text-neutral-900 mb-6">Quick Actions</h3>
-                  <div className="space-y-4">
-                    <Link to="/booking" className="block">
-                      <Button className="w-full bg-gold hover:bg-gold-dark text-white">
-                        Book Your Journey
-                      </Button>
-                    </Link>
-                    <Link to="/packages" className="block">
-                      <Button variant="outline" className="w-full border-gold text-gold hover:bg-gold hover:text-white">
-                        View Packages
-                      </Button>
-                    </Link>
-                    <a href="https://wa.me/+966559572454" target="_blank" rel="noopener noreferrer" className="block">
-                      <Button variant="outline" className="w-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white">
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        WhatsApp Us
-                      </Button>
-                    </a>
                   </div>
                 </CardContent>
               </Card>
