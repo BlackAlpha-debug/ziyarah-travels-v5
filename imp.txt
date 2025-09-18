@@ -9,3 +9,19 @@ npm init -y
 npm install express
 npm install --save-dev nodemon
 npm run dev
+
+
+
+git
+
+
+git add package.json package-lock.json
+>> git commit -m "fix(build): ensure leaflet is included in dependencies"
+>> git push
+
+
+
+                                                   
+git add src/pages/ContactPage.tsx
+>> git commit -m "feat(contact): integrate Leaflet map for Hafeez Center Lahore location"
+>> git push            
