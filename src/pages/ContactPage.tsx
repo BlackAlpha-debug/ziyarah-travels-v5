@@ -63,9 +63,6 @@ const ContactPage = () => {
     };
   }, []);
 
-  // Reusable contact button style
-  const contactButtonClass = "text-gold font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 rounded-md p-1 transition-all";
-
   return (
     <main className="min-h-screen">
       <Navigation />
@@ -88,60 +85,67 @@ const ContactPage = () => {
       <section className="py-20 px-6 bg-neutral-50">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-            {/* PHONE */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
-              <CardContent className="p-6">
-                <Phone className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-bold text-neutral-900 mb-2">Phone</h3>
-                <p className="text-muted-foreground text-sm mb-3">Call us directly</p>
-                <a href="tel:+966559572454" className={contactButtonClass}>
-                  +966 55 957 2454
-                </a>
-              </CardContent>
-            </Card>
+            {/* PHONE — Entire card clickable, blue on hover */}
+            <a href="tel:+966559572454" className="block">
+              <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group bg-white hover:bg-blue-50">
+                <CardContent className="p-6">
+                  <Phone className="w-12 h-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-lg font-bold text-neutral-900 mb-2">Phone</h3>
+                  <p className="text-muted-foreground text-sm mb-3">Call us directly</p>
+                  <p className="text-blue-600 font-medium hover:underline">
+                    +966 55 957 2454
+                  </p>
+                </CardContent>
+              </Card>
+            </a>
 
-            {/* WHATSAPP */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
-              <CardContent className="p-6">
-                <MessageCircle className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-bold text-neutral-900 mb-2">WhatsApp</h3>
-                <p className="text-muted-foreground text-sm mb-3">Quick messaging</p>
-                <a href="https://wa.me/966559572454" className={contactButtonClass} target="_blank" rel="noopener noreferrer">
-                  Message Us
-                </a>
-              </CardContent>
-            </Card>
+            {/* WHATSAPP — Entire card clickable, green on hover */}
+            <a href="https://wa.me/966559572454" target="_blank" rel="noopener noreferrer" className="block">
+              <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group bg-white hover:bg-green-50">
+                <CardContent className="p-6">
+                  <MessageCircle className="w-12 h-12 text-green-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-lg font-bold text-neutral-900 mb-2">WhatsApp</h3>
+                  <p className="text-muted-foreground text-sm mb-3">Quick messaging</p>
+                  <p className="text-green-600 font-medium hover:underline">
+                    Message Us
+                  </p>
+                </CardContent>
+              </Card>
+            </a>
 
-            {/* EMAIL */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
-              <CardContent className="p-6">
-                <Mail className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-bold text-neutral-900 mb-2">Email</h3>
-                <p className="text-muted-foreground text-sm mb-3">Send us details</p>
-                <a href="mailto:Ziyarahtarvels.info@gmail.com" className={contactButtonClass}>
-                  Ziyarahtarvels.info@gmail.com
-                </a>
-              </CardContent>
-            </Card>
+            {/* EMAIL — Entire card clickable, purple on hover */}
+            <a href="mailto:Ziyarahtarvels.info@gmail.com" className="block">
+              <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group bg-white hover:bg-purple-50">
+                <CardContent className="p-6">
+                  <Mail className="w-12 h-12 text-purple-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-lg font-bold text-neutral-900 mb-2">Email</h3>
+                  <p className="text-muted-foreground text-sm mb-3">Send us details</p>
+                  <p className="text-purple-600 font-medium hover:underline break-all">
+                    Ziyarahtarvels.info@gmail.com
+                  </p>
+                </CardContent>
+              </Card>
+            </a>
 
-            {/* LOCATION */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
-              <CardContent className="p-6">
-                <MapPin className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-bold text-neutral-900 mb-2">Location</h3>
-                <p className="text-muted-foreground text-sm mb-3">Visit our office</p>
-                <p className="text-gold font-medium text-sm">
-                  Makkah, Saudi Arabia
-                </p>
-              </CardContent>
-            </Card>
+            {/* LOCATION — Entire card clickable, amber on hover */}
+            <a href="https://maps.google.com/?q=Makkah,+Saudi+Arabia" target="_blank" rel="noopener noreferrer" className="block">
+              <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group bg-white hover:bg-amber-50">
+                <CardContent className="p-6">
+                  <MapPin className="w-12 h-12 text-amber-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-lg font-bold text-neutral-900 mb-2">Location</h3>
+                  <p className="text-muted-foreground text-sm mb-3">Visit our office</p>
+                  <p className="text-amber-600 font-medium hover:underline">
+                    Makkah, Saudi Arabia
+                  </p>
+                </CardContent>
+              </Card>
+            </a>
           </div>
 
           {/* Contact Form and Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* LEFT COLUMN: Contact Form + Quick Actions */}
-            <div className="space-y-8">
-              {/* Contact Form */}
+            {/* LEFT COLUMN: Contact Form */}
+            <div>
               {isSubmitted ? (
                 <Card className="border-0 shadow-elegant">
                   <CardContent className="p-8 text-center">
@@ -233,8 +237,6 @@ const ContactPage = () => {
                   </CardContent>
                 </Card>
               )}
-
-              {/* ✅ MOVED: Quick Actions Section */}
             </div>
 
             {/* RIGHT COLUMN: Map and Business Hours */}
