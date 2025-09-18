@@ -234,6 +234,9 @@ const ContactPage = () => {
                 </Card>
               )}
 
+              {/* ✅ MOVED: Quick Actions Section */}
+            </div>
+
             {/* RIGHT COLUMN: Map and Business Hours */}
             <div className="space-y-8">
               {/* Map */}
