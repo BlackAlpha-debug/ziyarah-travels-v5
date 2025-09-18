@@ -64,7 +64,7 @@ const ContactPage = () => {
   }, []);
 
   // Reusable contact button style
-  const contactButtonClass = "font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-md p-1 transition-all";
+  const contactButtonClass = "text-gold font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 rounded-md p-1 transition-all";
 
   return (
     <main className="min-h-screen">
@@ -88,49 +88,49 @@ const ContactPage = () => {
       <section className="py-20 px-6 bg-neutral-50">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-            {/* PHONE — Blue Shade */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-blue-50 hover:bg-blue-100">
+            {/* PHONE */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
               <CardContent className="p-6">
-                <Phone className="w-12 h-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                <Phone className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">Phone</h3>
                 <p className="text-muted-foreground text-sm mb-3">Call us directly</p>
-                <a href="tel:+966559572454" className={`${contactButtonClass} text-blue-600`}>
+                <a href="tel:+966559572454" className={contactButtonClass}>
                   +966 55 957 2454
                 </a>
               </CardContent>
             </Card>
 
-            {/* WHATSAPP — Green Shade */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-green-50 hover:bg-green-100">
+            {/* WHATSAPP */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
               <CardContent className="p-6">
-                <MessageCircle className="w-12 h-12 text-green-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                <MessageCircle className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">WhatsApp</h3>
                 <p className="text-muted-foreground text-sm mb-3">Quick messaging</p>
-                <a href="https://wa.me/966559572454" className={`${contactButtonClass} text-green-600`} target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/966559572454" className={contactButtonClass} target="_blank" rel="noopener noreferrer">
                   Message Us
                 </a>
               </CardContent>
             </Card>
 
-            {/* EMAIL — Purple Shade */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-purple-50 hover:bg-purple-100">
+            {/* EMAIL */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
               <CardContent className="p-6">
-                <Mail className="w-12 h-12 text-purple-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                <Mail className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">Email</h3>
                 <p className="text-muted-foreground text-sm mb-3">Send us details</p>
-                <a href="mailto:Ziarahtarvels.info@gmail.com" className={`${contactButtonClass} text-purple-600`}>
+                <a href="mailto:Ziarahtarvels.info@gmail.com" className={contactButtonClass}>
                   Ziarahtarvels.info@gmail.com
                 </a>
               </CardContent>
             </Card>
 
-            {/* LOCATION — Amber/Orange Shade */}
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-amber-50 hover:bg-amber-100">
+            {/* LOCATION */}
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer bg-white hover:bg-neutral-50">
               <CardContent className="p-6">
-                <MapPin className="w-12 h-12 text-amber-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                <MapPin className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">Location</h3>
                 <p className="text-muted-foreground text-sm mb-3">Visit our office</p>
-                <p className="text-amber-600 font-medium text-sm">
+                <p className="text-gold font-medium text-sm">
                   Makkah, Saudi Arabia
                 </p>
               </CardContent>
@@ -139,8 +139,9 @@ const ContactPage = () => {
 
           {/* Contact Form and Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* LEFT COLUMN: Contact Form Only (Quick Actions Removed) */}
-            <div>
+            {/* LEFT COLUMN: Contact Form + Quick Actions */}
+            <div className="space-y-8">
+              {/* Contact Form */}
               {isSubmitted ? (
                 <Card className="border-0 shadow-elegant">
                   <CardContent className="p-8 text-center">
@@ -232,6 +233,31 @@ const ContactPage = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* ✅ MOVED: Quick Actions Section */}
+              <Card className="border-0 shadow-elegant">
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-bold text-neutral-900 mb-6">Quick Actions</h3>
+                  <div className="space-y-4">
+                    <Link to="/booking" className="block">
+                      <Button className="w-full bg-gold hover:bg-gold-dark text-white">
+                        Book Your Journey
+                      </Button>
+                    </Link>
+                    <Link to="/packages" className="block">
+                      <Button variant="outline" className="w-full border-gold text-gold hover:bg-gold hover:text-white">
+                        View Packages
+                      </Button>
+                    </Link>
+                    <a href="https://wa.me/966559572454" target="_blank" rel="noopener noreferrer" className="block">
+                      <Button variant="outline" className="w-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white">
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        WhatsApp Us
+                      </Button>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* RIGHT COLUMN: Map and Business Hours */}
