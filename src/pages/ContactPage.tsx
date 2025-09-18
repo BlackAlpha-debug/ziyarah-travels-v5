@@ -6,8 +6,10 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Phone, MessageCircle, Mail, MapPin, Clock, CheckCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import L from "leaflet";
+import 'leaflet/dist/leaflet.css';
 
 const ContactPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -27,6 +29,39 @@ const ContactPage = () => {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // Initialize Leaflet map for Hafeez Center, Lahore
+  useEffect(() => {
+    // Fix marker icon paths for Vite/Webpack
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    });
+
+    // Coordinates for Hafeez Center, Lahore, Pakistan
+    const hafeezCenterLatLng: [number, number] = [31.4747, 74.3320];
+
+    // Initialize the map
+    const map = L.map('map').setView(hafeezCenterLatLng, 16);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Add a marker with a popup
+    L.marker(hafeezCenterLatLng)
+      .addTo(map)
+      .bindPopup("<b>Hafeez Center</b><br>Lahore, Pakistan")
+      .openPopup();
+
+    // Cleanup function to remove map on component unmount
+    return () => {
+      map.remove();
+    };
+  }, []);
 
   return (
     <main className="min-h-screen">
@@ -194,16 +229,10 @@ const ContactPage = () => {
 
             {/* Map and Business Hours */}
             <div className="space-y-8">
-              {/* Map */}
+              {/* Map - Now with Leaflet */}
               <Card className="border-0 shadow-elegant">
                 <CardContent className="p-0">
-                  <div className="h-80 bg-neutral-200 rounded-lg flex items-center justify-center">
-                    <div className="text-center text-muted-foreground">
-                      <MapPin className="w-12 h-12 mx-auto mb-2" />
-                      <p className="font-medium">Interactive Map</p>
-                      <p className="text-sm">Location: Makkah, Saudi Arabia</p>
-                    </div>
-                  </div>
+                  <div id="map" className="h-80 w-full rounded-lg" style={{ zIndex: 0 }}></div>
                 </CardContent>
               </Card>
 
