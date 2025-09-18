@@ -118,8 +118,8 @@ const ContactPage = () => {
                 <Mail className="w-12 h-12 text-gold mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-neutral-900 mb-2">Email</h3>
                 <p className="text-muted-foreground text-sm mb-3">Send us details</p>
-                <a href="mailto:Ziarahtarvels.info@gmail.com" className={contactButtonClass}>
-                  Ziarahtarvels.info@gmail.com
+                <a href="mailto:Ziyarahtarvels.info@gmail.com" className={contactButtonClass}>
+                  Ziyarahtarvels.info@gmail.com
                 </a>
               </CardContent>
             </Card>
@@ -233,32 +233,6 @@ const ContactPage = () => {
                   </CardContent>
                 </Card>
               )}
-
-              {/* ✅ MOVED: Quick Actions Section */}
-              <Card className="border-0 shadow-elegant">
-                <CardContent className="p-8">
-                  <h3 className="text-2xl font-bold text-neutral-900 mb-6">Quick Actions</h3>
-                  <div className="space-y-4">
-                    <Link to="/booking" className="block">
-                      <Button className="w-full bg-gold hover:bg-gold-dark text-white">
-                        Book Your Journey
-                      </Button>
-                    </Link>
-                    <Link to="/packages" className="block">
-                      <Button variant="outline" className="w-full border-gold text-gold hover:bg-gold hover:text-white">
-                        View Packages
-                      </Button>
-                    </Link>
-                    <a href="https://wa.me/966559572454" target="_blank" rel="noopener noreferrer" className="block">
-                      <Button variant="outline" className="w-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white">
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        WhatsApp Us
-                      </Button>
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
             {/* RIGHT COLUMN: Map and Business Hours */}
             <div className="space-y-8">
