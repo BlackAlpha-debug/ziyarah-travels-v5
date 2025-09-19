@@ -16,11 +16,14 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { send } from "@emailjs/browser";
 
 // ==================== DATA ====================
+
 const pickupLocations = [
-  "Jeddah Airport", "Madinah Airport", "Makkah Hotels", "Madinah Hotels",
-  "Jeddah Hotels", "Al-Haram Area", "Prophet's Mosque Area", "Aziziyah District",
+  "King Abdulaziz International Airport", "Prince Mohammed bin Abdulaziz Airport",
+  "Madinah Airport", "Makkah Hotels", "Madinah Hotels",
+  "Jeddah Hotels", "Masjid-e-Haram", "Masjid-Nabwi","Miqat Dhu al-Hulayfah",
+  "Masjid at-Taneem","Madain Saleh","Aziziyah District",
   "Al-Hijra District", "Ajyad District", "Al-Misfalah District", "Al-Jamiah District",
-  "King Abdulaziz International Airport", "Prince Mohammed bin Abdulaziz Airport"
+
 ];
 
 const destinations = [
@@ -51,7 +54,7 @@ const packages = [
 // ==================== COMPONENT ====================
 const BookingPage = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate(); // 👈 NEW: For redirection
+  const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,6 +104,73 @@ const BookingPage = () => {
       setSelectedVehicle("");
     }
   }, [formData.package]);
+
+  // ✅ WhatsApp Business API — USING TEMPLATE (WORKS WITHOUT PRIOR CHAT)
+  const sendWhatsAppMessage = async (
+    to: string,
+    firstName: string,
+    bookingDetails: string,
+    specialRequests: string
+  ) => {
+    const PHONE_ID = "780619091801476";
+    const TOKEN = "EAAYWCLCijuABPSfp01dsTCeuRNw7tCaNAtSNGq8lBc1nKKJeigEDN0XVZBD51v5A7h4aLuBlz6ORIxJ47mTDODwrzO7qrZCysXFYMWdaPhD0z9qlRDBkCrdyOkgRPzR7PZAxD7sVig6aDCr4siCVOzNlAEreSKwMNmBDxhzp8UMfAs0cJumKCYmoL8X1NVLA3eTG4ZAILs7d0OXZCr1QbNqYRUKN28tBXCruH6Ff49Hp5uukZD";
+
+    // ✅ Auto-add + if missing
+    const formattedTo = to.startsWith('+') ? to : '+' + to;
+
+    // 🚨 FIXED: Removed extra space in URL
+    const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
+
+    // Prepare template — escape newlines for WhatsApp
+    const cleanBookingDetails = bookingDetails.replace(/\n/g, "\\n");
+    const cleanSpecialRequests = (specialRequests || "None").replace(/\n/g, "\\n");
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: formattedTo,
+      type: "template",
+      template: {
+        name: "booking_confirmation", // 👈 MUST MATCH EXACTLY IN META
+        language: {
+          code: "en_US"
+        },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: firstName },
+              { type: "text", text: cleanBookingDetails },
+              { type: "text", text: cleanSpecialRequests }
+            ]
+          }
+        ]
+      }
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("❌ WhatsApp API Error:", errorData);
+        throw new Error(`WhatsApp send failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ WhatsApp Template sent successfully:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ Failed to send WhatsApp template:", error);
+      // Do NOT throw — let email succeed even if WhatsApp fails
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,6 +244,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
     try {
       setIsSubmitting(true);
 
+      // ✅ SEND EMAIL — UNCHANGED
       await send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
@@ -182,8 +253,17 @@ Pickup Location: ${formData.pickup || "Not selected"}
       );
 
       console.log("✅ Email sent successfully!");
-      
-      // ✅ REDIRECT TO CONFIRMATION PAGE — CLEAN & SEPARATED
+
+      // ✅ SEND WHATSAPP TEMPLATE — WITH + PREFIX HANDLED
+      // 💡 Since you send <20/day → well under 1,000 free tier → 100% FREE
+      sendWhatsAppMessage(
+        formData.phone,               // 👈 Auto-converted to +92... if needed
+        formData.firstName,
+        bookingDetails,
+        formData.specialRequests
+      );
+
+      // ✅ REDIRECT AFTER SENDING
       navigate("/booking-confirmation", { replace: true });
 
     } catch (error) {
@@ -276,7 +356,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => handleInputChange("phone", e.target.value)}
-                          placeholder="50 123 4567"
+                          placeholder="923055754320 (no + needed)"
                           required
                         />
                       </div>
@@ -546,7 +626,6 @@ Pickup Location: ${formData.pickup || "Not selected"}
                         "Submit Booking Request"
                       )}
                     </Button>
-                    {/* ❌ NO EXTRA LOADING ANIMATION BELOW — REMOVED AS REQUESTED */}
                   </form>
                 </CardContent>
               </Card>
