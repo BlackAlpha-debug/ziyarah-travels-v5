@@ -27,10 +27,42 @@ const pickupLocations = [
 ];
 
 const destinations = [
-  "Holy Makkah", "Al-Ghars Well", "Madinah Al-Munawwarah", "Quba Mosque",
-  "Mount Uhud", "Masjid al-Qiblatayn", "Mina Valley", "Be'er Shifa",
-  "Valley Jin", "Jabal Thawr"
+  "Holy Makkah",
+  "Al-Ghars Well",
+  "Madinah Al-Munawwarah",
+  "Quba Mosque",
+  "Mount Uhud",
+  "Masjid al-Qiblatayn",
+  "Mina Valley",
+  "Be'er Shifa",
+  "Valley Jin",
+  "Jabal Thawr",
+
+  // More Makkah Sites
+
+  "Masjid Aisha (Masjid at-Taneem)",
+  "Jabal al-Nour (Hira Cave)",
+  "Jannat al-Mu'alla Cemetery",
+  "Muzdalifah",
+  "Arafat (Jabal al-Rahmah)",
+  "Jamarat (Stoning site)",
+  
+  // More Madinah Sites
+  "Masjid an-Nabawi",
+  "Rawdah ash-Sharifah",
+  "Jannat al-Baqi Cemetery",
+  "Masjid Ghamama",
+  "Masjid Abu Bakr",
+  "Masjid Umar ibn al-Khattab",
+  
+  // Other Ziyarat / Historic Sites
+  "Battlefield of Badr",
+  "Ta’if (Masjid Addas & Shubra Palace)",
+  "Khaybar",
+  "Madain Saleh ",,
+  "Masjid Salman al-Farisi"
 ];
+
 
 const carModels = [
   "Hyundai Staria",
