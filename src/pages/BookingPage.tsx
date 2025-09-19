@@ -127,8 +127,6 @@ const BookingPage = () => {
       setSelectedVehicle("");
     }
   }, [formData.package]);
-
-// ✅ WhatsApp Business API — BEAUTIFIED VERSION
 const sendWhatsAppMessage = async (
   to: string,
   firstName: string,
@@ -138,45 +136,18 @@ const sendWhatsAppMessage = async (
   const PHONE_ID = "780619091801476";
   const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
 
-  // ✅ Clean phone
+  // Clean phone
   const cleanPhone = to.replace(/\D/g, '');
   const formattedTo = '+' + cleanPhone;
   const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
 
-  // ✅ BEAUTIFY TEXT WITH EMOJIS & STRUCTURE
-  const beautifyText = (text: string) => {
-    let formatted = text
-      .replace(/[\n\r]/g, ' • ')
-      .replace(/\t/g, ' ')
+  // ✅ SIMPLE CLEANER — REMOVES ONLY ILLEGAL CHARS
+  const cleanText = (text: string) => {
+    return text
+      .replace(/[\n\r\t]/g, ' ')
       .replace(/\s{2,}/g, ' ')
-      .replace(/Package:/g, '📦 Package:')
-      .replace(/Preferred Date:/g, '📅 Preferred Date:')
-      .replace(/Pickup:/g, '📍 Pickup:')
-      .replace(/Destination:/g, '🏁 Destination:')
-      .replace(/Trip Type:/g, '↔️ Trip Type:')
-      .replace(/Vehicle:/g, '🚗 Vehicle:')
-      .replace(/Route Dates:/g, '	Route Dates:')
-      .replace(/• Jeddah Airport →/g, '	→ Jeddah Airport →')
-      .replace(/• Makkah Hotel →/g, '	→ Makkah Hotel →')
-      .replace(/• Madinah Hotel →/g, '	→ Madinah Hotel →')
-      .replace(/• Madinah →/g, '	→ Madinah →')
-      .replace(/• Makkah →/g, '	→ Makkah →')
-      .replace(/• Makkah Hotel → Jeddah Airport:/g, '	→ Makkah Hotel → Jeddah Airport:')
       .trim();
-
-    // Add section headers for better structure
-    if (formatted.includes('Route Dates:')) {
-      formatted = formatted.replace('	Route Dates:', '\n\n	Route Dates:');
-    }
-
-    return formatted;
   };
-
-  const cleanFirstName = beautifyText(firstName);
-  const cleanBookingDetails = beautifyText(bookingDetails);
-  const cleanSpecialRequests = beautifyText(specialRequests || "None");
-
-  console.log("📤 Cleaned Booking Details:", cleanBookingDetails);
 
   const payload = {
     messaging_product: "whatsapp",
@@ -189,9 +160,9 @@ const sendWhatsAppMessage = async (
         {
           type: "body",
           parameters: [
-            { type: "text", text: cleanFirstName },
-            { type: "text", text: cleanBookingDetails },
-            { type: "text", text: cleanSpecialRequests }
+            { type: "text", text: cleanText(firstName) },
+            { type: "text", text: cleanText(bookingDetails) },
+            { type: "text", text: cleanText(specialRequests || "None") }
           ]
         }
       ]
