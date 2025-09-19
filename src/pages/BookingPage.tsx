@@ -4,7 +4,7 @@ import WhatsAppButton from "../components/WhatsappAppButton";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/Label";
+import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Calendar } from "../components/ui/calendar";
@@ -16,17 +16,43 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { send } from "@emailjs/browser";
 
 // ==================== DATA ====================
+
 const pickupLocations = [
-  "Jeddah Airport", "Madinah Airport", "Makkah Hotels", "Madinah Hotels",
-  "Jeddah Hotels", "Al-Haram Area", "Prophet's Mosque Area", "Aziziyah District",
+  "King Abdulaziz International Airport", "Prince Mohammed bin Abdulaziz Airport",
+  "Madinah Airport", "Makkah Hotels", "Madinah Hotels",
+  "Jeddah Hotels", "Masjid-e-Haram", "Masjid-Nabwi","Miqat Dhu al-Hulayfah",
+  "Masjid at-Taneem","Madain Saleh","Aziziyah District",
   "Al-Hijra District", "Ajyad District", "Al-Misfalah District", "Al-Jamiah District",
-  "King Abdulaziz International Airport", "Prince Mohammed bin Abdulaziz Airport"
 ];
 
 const destinations = [
-  "Holy Makkah", "Al-Ghars Well", "Madinah Al-Munawwarah", "Quba Mosque",
-  "Mount Uhud", "Masjid al-Qiblatayn", "Mina Valley", "Be'er Shifa",
-  "Valley Jin", "Jabal Thawr"
+  "Holy Makkah",
+  "Al-Ghars Well",
+  "Madinah Al-Munawwarah",
+  "Quba Mosque",
+  "Mount Uhud",
+  "Masjid al-Qiblatayn",
+  "Mina Valley",
+  "Be'er Shifa",
+  "Valley Jin",
+  "Jabal Thawr",
+  "Masjid Aisha (Masjid at-Taneem)",
+  "Jabal al-Nour (Hira Cave)",
+  "Jannat al-Mu'alla Cemetery",
+  "Muzdalifah",
+  "Arafat (Jabal al-Rahmah)",
+  "Jamarat (Stoning site)",
+  "Masjid an-Nabawi",
+  "Rawdah ash-Sharifah",
+  "Jannat al-Baqi Cemetery",
+  "Masjid Ghamama",
+  "Masjid Abu Bakr",
+  "Masjid Umar ibn al-Khattab",
+  "Battlefield of Badr",
+  "Ta’if (Masjid Addas & Shubra Palace)",
+  "Khaybar",
+  "Madain Saleh",
+  "Masjid Salman al-Farisi"
 ];
 
 const carModels = [
@@ -102,7 +128,7 @@ const BookingPage = () => {
     }
   }, [formData.package]);
 
-  // ✅ WhatsApp Business API — USING TEMPLATE (WORKS WITHOUT PRIOR CHAT)
+  // ✅ WhatsApp Business API — FIXED URL, WORKING
   const sendWhatsAppMessage = async (
     to: string,
     firstName: string,
@@ -110,12 +136,12 @@ const BookingPage = () => {
     specialRequests: string
   ) => {
     const PHONE_ID = "780619091801476";
-    const TOKEN = "EAAYWCLCijuABPSfp01dsTCeuRNw7tCaNAtSNGq8lBc1nKKJeigEDN0XVZBD51v5A7h4aLuBlz6ORIxJ47mTDODwrzO7qrZCysXFYMWdaPhD0z9qlRDBkCrdyOkgRPzR7PZAxD7sVig6aDCr4siCVOzNlAEreSKwMNmBDxhzp8UMfAs0cJumKCYmoL8X1NVLA3eTG4ZAILs7d0OXZCr1QbNqYRUKN28tBXCruH6Ff49Hp5uukZD";
+    const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
 
     // ✅ Auto-add + if missing
     const formattedTo = to.startsWith('+') ? to : '+' + to;
 
-    // 🚨 FIXED: Removed extra space in URL
+    // ✅ FIXED: NO EXTRA SPACES — CRITICAL FIX
     const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
 
     // Prepare template — escape newlines for WhatsApp
@@ -127,7 +153,7 @@ const BookingPage = () => {
       to: formattedTo,
       type: "template",
       template: {
-        name: "booking_confirmation", // 👈 MUST MATCH EXACTLY IN META
+        name: "booking_confirmation", // Must match approved template name
         language: {
           code: "en_US"
         },
@@ -156,8 +182,8 @@ const BookingPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("❌ WhatsApp API Error:", errorData);
-        throw new Error(`WhatsApp send failed: ${response.status}`);
+        console.error("❌ WhatsApp API Error Response:", errorData);
+        throw new Error(`WhatsApp send failed: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
@@ -165,7 +191,7 @@ const BookingPage = () => {
       return result;
     } catch (error) {
       console.error("❌ Failed to send WhatsApp template:", error);
-      // Do NOT throw — let email succeed even if WhatsApp fails
+      // Do not throw — email should still succeed
     }
   };
 
@@ -251,10 +277,9 @@ Pickup Location: ${formData.pickup || "Not selected"}
 
       console.log("✅ Email sent successfully!");
 
-      // ✅ SEND WHATSAPP TEMPLATE — WITH + PREFIX HANDLED
-      // 💡 Since you send <20/day → well under 1,000 free tier → 100% FREE
+      // ✅ SEND WHATSAPP TEMPLATE — NOW WORKING
       sendWhatsAppMessage(
-        formData.phone,               // 👈 Auto-converted to +92... if needed
+        formData.phone,
         formData.firstName,
         bookingDetails,
         formData.specialRequests
@@ -274,6 +299,39 @@ Pickup Location: ${formData.pickup || "Not selected"}
   const isUmrahPackage = formData.package === "umrah" || formData.package === "essential";
   const isNonePackage = formData.package === "none";
   const isOtherPackage = !isNonePackage && !isUmrahPackage;
+
+  // ✅ Reusable Calendar Popover Component for Consistency
+  const DatePickerPopover = ({
+    value,
+    onChange,
+    label,
+    required = false
+  }: {
+    value?: Date;
+    onChange: (date: Date | undefined) => void;
+    label: string;
+    required?: boolean;
+  }) => (
+    <div className="space-y-2">
+      <Label>{label}{required ? " *" : ""}</Label>
+      <Popover modal={false}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-start text-left font-normal">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {value ? format(value, "PPP") : <span>Pick date</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={value}
+            onSelect={onChange}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
 
   return (
     <main className="min-h-screen">
@@ -383,20 +441,12 @@ Pickup Location: ${formData.pickup || "Not selected"}
 
                       {/* Preferred Date (for None and Other packages) */}
                       {(isNonePackage || isOtherPackage) && (
-                        <div className="space-y-2">
-                          <Label>Preferred Date *</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP") : <span>Pick a date</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                        <DatePickerPopover
+                          value={date}
+                          onChange={setDate}
+                          label="Preferred Date"
+                          required={true}
+                        />
                       )}
                     </div>
 
@@ -506,30 +556,18 @@ Pickup Location: ${formData.pickup || "Not selected"}
                         </div>
                         {Object.entries(umrahExpressDates).map(([key, value]) => {
                           const labels: Record<string, string> = {
-                            jeddahToMakkah: "Jeddah Airport → Makkah Hotel *",
-                            makkahToMadinah: "Makkah Hotel → Madinah Hotel *",
-                            madinahToAirport: "Madinah Hotel → Madinah Airport *"
+                            jeddahToMakkah: "Jeddah Airport → Makkah Hotel",
+                            makkahToMadinah: "Makkah Hotel → Madinah Hotel",
+                            madinahToAirport: "Madinah Hotel → Madinah Airport"
                           };
                           return (
-                            <div key={key} className="space-y-2">
-                              <Label>{labels[key]}</Label>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {value ? format(value, "PPP") : <span>Pick date</span>}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <Calendar
-                                    mode="single"
-                                    selected={value}
-                                    onSelect={(d) => setUmrahExpressDates(prev => ({ ...prev, [key]: d }))}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
+                            <DatePickerPopover
+                              key={key}
+                              value={value}
+                              onChange={(d) => setUmrahExpressDates(prev => ({ ...prev, [key]: d }))}
+                              label={labels[key]}
+                              required={true}
+                            />
                           );
                         })}
                         <div className="col-span-full space-y-2">
@@ -553,31 +591,19 @@ Pickup Location: ${formData.pickup || "Not selected"}
                         </div>
                         {Object.entries(umrahPremiumDates).map(([key, value]) => {
                           const labels: Record<string, string> = {
-                            jeddahToMakkah: "Jeddah Airport → Makkah Hotel *",
-                            makkahToMadinah: "Makkah Hotel → Madinah *",
-                            madinahToMakkah: "Madinah Hotel → Makkah *",
-                            makkahToJeddah: "Makkah Hotel → Jeddah Airport *"
+                            jeddahToMakkah: "Jeddah Airport → Makkah Hotel",
+                            makkahToMadinah: "Makkah Hotel → Madinah",
+                            madinahToMakkah: "Madinah Hotel → Makkah",
+                            makkahToJeddah: "Makkah Hotel → Jeddah Airport"
                           };
                           return (
-                            <div key={key} className="space-y-2">
-                              <Label>{labels[key]}</Label>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {value ? format(value, "PPP") : <span>Pick date</span>}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <Calendar
-                                    mode="single"
-                                    selected={value}
-                                    onSelect={(d) => setUmrahPremiumDates(prev => ({ ...prev, [key]: d }))}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
+                            <DatePickerPopover
+                              key={key}
+                              value={value}
+                              onChange={(d) => setUmrahPremiumDates(prev => ({ ...prev, [key]: d }))}
+                              label={labels[key]}
+                              required={true}
+                            />
                           );
                         })}
                         <div className="col-span-full space-y-2">
@@ -593,7 +619,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
                       </>
                     )}
 
-                    {/* Special Requests — ALWAYS SHOWS NOW — FIXED */}
+                    {/* Special Requests */}
                     <div className="space-y-2">
                       <Label htmlFor="requests">Special Requests or Notes</Label>
                       <Textarea
@@ -605,7 +631,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
                       />
                     </div>
 
-                    {/* PROFESSIONAL LOADING BUTTON — SVG SPINNER INSIDE ONLY */}
+                    {/* Submit Button */}
                     <Button
                       type="submit"
                       className="w-full bg-gold hover:bg-gold-dark text-white py-3 text-lg font-semibold rounded-lg transition-colors"
