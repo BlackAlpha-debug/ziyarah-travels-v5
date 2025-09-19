@@ -128,8 +128,7 @@ const BookingPage = () => {
     }
   }, [formData.package]);
 
-  // ✅ WhatsApp Business API — 100% CORRECTED VERSION
-// ✅ WhatsApp Business API — FIXED FOR NEWLINE/TAB RESTRICTION
+// ✅ WhatsApp Business API — BEAUTIFIED VERSION
 const sendWhatsAppMessage = async (
   to: string,
   firstName: string,
@@ -139,31 +138,45 @@ const sendWhatsAppMessage = async (
   const PHONE_ID = "780619091801476";
   const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
 
-  // ✅ FORCE correct phone format
+  // ✅ Clean phone
   const cleanPhone = to.replace(/\D/g, '');
   const formattedTo = '+' + cleanPhone;
-
-  // ✅ CRITICAL: NO SPACES IN URL
   const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
 
-  // ✅ DEBUG LOGS
-  console.log("📤 WhatsApp Sending To:", formattedTo);
-  console.log("📤 Template Language Code: en");
+  // ✅ BEAUTIFY TEXT WITH EMOJIS & STRUCTURE
+  const beautifyText = (text: string) => {
+    let formatted = text
+      .replace(/[\n\r]/g, ' • ')
+      .replace(/\t/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/Package:/g, '📦 Package:')
+      .replace(/Preferred Date:/g, '📅 Preferred Date:')
+      .replace(/Pickup:/g, '📍 Pickup:')
+      .replace(/Destination:/g, '🏁 Destination:')
+      .replace(/Trip Type:/g, '↔️ Trip Type:')
+      .replace(/Vehicle:/g, '🚗 Vehicle:')
+      .replace(/Route Dates:/g, '	Route Dates:')
+      .replace(/• Jeddah Airport →/g, '	→ Jeddah Airport →')
+      .replace(/• Makkah Hotel →/g, '	→ Makkah Hotel →')
+      .replace(/• Madinah Hotel →/g, '	→ Madinah Hotel →')
+      .replace(/• Madinah →/g, '	→ Madinah →')
+      .replace(/• Makkah →/g, '	→ Makkah →')
+      .replace(/• Makkah Hotel → Jeddah Airport:/g, '	→ Makkah Hotel → Jeddah Airport:')
+      .trim();
 
-  // 🚫 FIX: Remove ALL newlines, tabs, and collapse multiple spaces
-  const cleanText = (text: string) => {
-    return text
-      .replace(/[\n\r\t]/g, ' ')     // Replace newlines/tabs with space
-      .replace(/\s{2,}/g, ' ')       // Collapse 2+ spaces to 1
-      .trim();                       // Trim leading/trailing spaces
+    // Add section headers for better structure
+    if (formatted.includes('Route Dates:')) {
+      formatted = formatted.replace('	Route Dates:', '\n\n	Route Dates:');
+    }
+
+    return formatted;
   };
 
-  const cleanFirstName = cleanText(firstName);
-  const cleanBookingDetails = cleanText(bookingDetails);
-  const cleanSpecialRequests = cleanText(specialRequests || "None");
+  const cleanFirstName = beautifyText(firstName);
+  const cleanBookingDetails = beautifyText(bookingDetails);
+  const cleanSpecialRequests = beautifyText(specialRequests || "None");
 
   console.log("📤 Cleaned Booking Details:", cleanBookingDetails);
-  console.log("📤 Cleaned Special Requests:", cleanSpecialRequests);
 
   const payload = {
     messaging_product: "whatsapp",
@@ -171,9 +184,7 @@ const sendWhatsAppMessage = async (
     type: "template",
     template: {
       name: "booking_confirmation",
-      language: {
-        code: "en"
-      },
+      language: { code: "en" },
       components: [
         {
           type: "body",
@@ -201,21 +212,17 @@ const sendWhatsAppMessage = async (
     console.log("📤 WhatsApp Raw Response:", responseText);
 
     if (!response.ok) {
-      let errorData;
-      try {
-        errorData = JSON.parse(responseText);
-      } catch {
-        errorData = { error: responseText };
-      }
-      console.error("❌ WhatsApp API Error Response:", errorData);
-      throw new Error(`WhatsApp send failed: ${response.status} ${response.statusText}`);
+      let errorData = { error: responseText };
+      try { errorData = JSON.parse(responseText); } catch {}
+      console.error("❌ WhatsApp API Error:", errorData);
+      throw new Error(`Failed: ${response.status}`);
     }
 
     const result = JSON.parse(responseText);
-    console.log("✅ WhatsApp Template sent successfully:", result);
+    console.log("✅ WhatsApp sent:", result);
     return result;
   } catch (error) {
-    console.error("❌ Failed to send WhatsApp template:", error);
+    console.error("❌ WhatsApp failed:", error);
   }
 };
 
