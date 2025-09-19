@@ -129,84 +129,95 @@ const BookingPage = () => {
   }, [formData.package]);
 
   // ✅ WhatsApp Business API — 100% CORRECTED VERSION
-  const sendWhatsAppMessage = async (
-    to: string,
-    firstName: string,
-    bookingDetails: string,
-    specialRequests: string
-  ) => {
-    const PHONE_ID = "780619091801476";
-    const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
+// ✅ WhatsApp Business API — FIXED FOR NEWLINE/TAB RESTRICTION
+const sendWhatsAppMessage = async (
+  to: string,
+  firstName: string,
+  bookingDetails: string,
+  specialRequests: string
+) => {
+  const PHONE_ID = "780619091801476";
+  const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
 
-    // ✅ FORCE correct phone format — remove all non-digits, then add +
-    const cleanPhone = to.replace(/\D/g, ''); // Keep only digits
-    const formattedTo = '+' + cleanPhone;
+  // ✅ FORCE correct phone format
+  const cleanPhone = to.replace(/\D/g, '');
+  const formattedTo = '+' + cleanPhone;
 
-    // ✅ CRITICAL: NO SPACES — HARD-CODED CORRECT URL
-    const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
+  // ✅ CRITICAL: NO SPACES IN URL
+  const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
 
-    // ✅ DEBUG: Log what we're sending
-    console.log("📤 WhatsApp Sending To:", formattedTo);
-    console.log("📤 Template Language Code: en");
-    console.log("📤 Booking Details Length:", bookingDetails.length, "chars");
+  // ✅ DEBUG LOGS
+  console.log("📤 WhatsApp Sending To:", formattedTo);
+  console.log("📤 Template Language Code: en");
 
-    // Prepare template — escape newlines for WhatsApp
-    const cleanBookingDetails = bookingDetails.replace(/\n/g, "\\n");
-    const cleanSpecialRequests = (specialRequests || "None").replace(/\n/g, "\\n");
+  // 🚫 FIX: Remove ALL newlines, tabs, and collapse multiple spaces
+  const cleanText = (text: string) => {
+    return text
+      .replace(/[\n\r\t]/g, ' ')     // Replace newlines/tabs with space
+      .replace(/\s{2,}/g, ' ')       // Collapse 2+ spaces to 1
+      .trim();                       // Trim leading/trailing spaces
+  };
 
-    const payload = {
-      messaging_product: "whatsapp",
-      to: formattedTo,
-      type: "template",
-      template: {
-        name: "booking_confirmation",
-        language: {
-          code: "en" // ✅ You confirmed your template uses "en"
-        },
-        components: [
-          {
-            type: "body",
-            parameters: [
-              { type: "text", text: firstName },
-              { type: "text", text: cleanBookingDetails },
-              { type: "text", text: cleanSpecialRequests }
-            ]
-          }
-        ]
-      }
-    };
+  const cleanFirstName = cleanText(firstName);
+  const cleanBookingDetails = cleanText(bookingDetails);
+  const cleanSpecialRequests = cleanText(specialRequests || "None");
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+  console.log("📤 Cleaned Booking Details:", cleanBookingDetails);
+  console.log("📤 Cleaned Special Requests:", cleanSpecialRequests);
 
-      const responseText = await response.text();
-      console.log("📤 WhatsApp Raw Response:", responseText);
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          errorData = { error: responseText };
+  const payload = {
+    messaging_product: "whatsapp",
+    to: formattedTo,
+    type: "template",
+    template: {
+      name: "booking_confirmation",
+      language: {
+        code: "en"
+      },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: cleanFirstName },
+            { type: "text", text: cleanBookingDetails },
+            { type: "text", text: cleanSpecialRequests }
+          ]
         }
-        console.error("❌ WhatsApp API Error Response:", errorData);
-        throw new Error(`WhatsApp send failed: ${response.status} ${response.statusText}`);
-      }
-
-      const result = JSON.parse(responseText);
-      console.log("✅ WhatsApp Template sent successfully:", result);
-      return result;
-    } catch (error) {
-      console.error("❌ Failed to send WhatsApp template:", error);
+      ]
     }
   };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const responseText = await response.text();
+    console.log("📤 WhatsApp Raw Response:", responseText);
+
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch {
+        errorData = { error: responseText };
+      }
+      console.error("❌ WhatsApp API Error Response:", errorData);
+      throw new Error(`WhatsApp send failed: ${response.status} ${response.statusText}`);
+    }
+
+    const result = JSON.parse(responseText);
+    console.log("✅ WhatsApp Template sent successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Failed to send WhatsApp template:", error);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
