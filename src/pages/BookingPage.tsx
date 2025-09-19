@@ -129,71 +129,71 @@ const BookingPage = () => {
   }, [formData.package]);
 
   // ✅ WhatsApp Business API — FIXED URL, WORKING
-  const sendWhatsAppMessage = async (
-    to: string,
-    firstName: string,
-    bookingDetails: string,
-    specialRequests: string
-  ) => {
-    const PHONE_ID = "780619091801476";
-    const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
+// ✅ WhatsApp Business API — FIXED LANGUAGE CODE
+const sendWhatsAppMessage = async (
+  to: string,
+  firstName: string,
+  bookingDetails: string,
+  specialRequests: string
+) => {
+  const PHONE_ID = "780619091801476";
+  const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
 
-    // ✅ Auto-add + if missing
-    const formattedTo = to.startsWith('+') ? to : '+' + to;
+  // ✅ Auto-add + if missing
+  const formattedTo = to.startsWith('+') ? to : '+' + to;
 
-    // ✅ FIXED: NO EXTRA SPACES — CRITICAL FIX
-    const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
+  // ✅ FIXED: NO EXTRA SPACES
+  const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
 
-    // Prepare template — escape newlines for WhatsApp
-    const cleanBookingDetails = bookingDetails.replace(/\n/g, "\\n");
-    const cleanSpecialRequests = (specialRequests || "None").replace(/\n/g, "\\n");
+  // Prepare template — escape newlines for WhatsApp
+  const cleanBookingDetails = bookingDetails.replace(/\n/g, "\\n");
+  const cleanSpecialRequests = (specialRequests || "None").replace(/\n/g, "\\n");
 
-    const payload = {
-      messaging_product: "whatsapp",
-      to: formattedTo,
-      type: "template",
-      template: {
-        name: "booking_confirmation", // Must match approved template name
-        language: {
-          code: "en"
-        },
-        components: [
-          {
-            type: "body",
-            parameters: [
-              { type: "text", text: firstName },
-              { type: "text", text: cleanBookingDetails },
-              { type: "text", text: cleanSpecialRequests }
-            ]
-          }
-        ]
-      }
-    };
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ WhatsApp API Error Response:", errorData);
-        throw new Error(`WhatsApp send failed: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log("✅ WhatsApp Template sent successfully:", result);
-      return result;
-    } catch (error) {
-      console.error("❌ Failed to send WhatsApp template:", error);
-      // Do not throw — email should still succeed
+  const payload = {
+    messaging_product: "whatsapp",
+    to: formattedTo,
+    type: "template",
+    template: {
+      name: "booking_confirmation",
+      language: {
+        code: "en" // ✅ MUST match your template's language — you chose "English" → "en"
+      },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: firstName },
+            { type: "text", text: cleanBookingDetails },
+            { type: "text", text: cleanSpecialRequests }
+          ]
+        }
+      ]
     }
   };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ WhatsApp API Error Response:", errorData);
+      throw new Error(`WhatsApp send failed: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ WhatsApp Template sent successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Failed to send WhatsApp template:", error);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
