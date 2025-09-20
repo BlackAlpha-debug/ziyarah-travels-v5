@@ -1,3 +1,4 @@
+// src/pages/CabBookingPage.tsx
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/navigation";
@@ -5,20 +6,19 @@ import WhatsAppButton from "@/components/WhatsappAppButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@//components/ui/label";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, MapPin, Phone, DollarSign, Mail, User } from "lucide-react";
+import { CalendarIcon, MapPin, Phone, DollarSign, Mail, User, CheckCircle, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-// ✅ Import EmailJS (optional — you can remove if not needed)
+// ✅ Import EmailJS
 import emailjs from "@emailjs/browser";
 emailjs.init("awvJIls7xVUtlL1yt");
 
-// ✅ WhatsApp Business API Credentials
+// ✅ WhatsApp API Credentials
 const PHONE_ID = "780619091801476";
 const TOKEN = "EAAYWCLCijuABPe0pYnxsdzoHA0HFzOnl5hIm39JdHR6sFjS34yHMAwQgfBa0UDyDEud9uAlj19lSZBqw5cDdoUzw6AZC5AZAX4skQa0UVKuW69GvgxltYzQyWdzg8vZCGuRcoTDqp1z5NLSoV1gVmZAKT0bapRIp5FeTjNW5pPMIJeLJFyKZApxA2AVP2cGbyTCTfbhkBw0IZAnfGsPKF80o9lExMlL5MZBq5osX";
 
@@ -61,6 +61,40 @@ const getCategoryTier = (category: string): string => {
   return mapping[key] || "Economy";
 };
 
+// ✅ Reusable Calendar Popover Component
+const DatePickerPopover = ({
+  value,
+  onChange,
+  label,
+  required = false
+}: {
+  value?: Date;
+  onChange: (date: Date | undefined) => void;
+  label: string;
+  required?: boolean;
+}) => (
+  <div className="space-y-2">
+    <Label>{label}{required ? " *" : ""}</Label>
+    <Popover modal={false}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-full justify-start text-left font-normal">
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {value ? format(value, "PPP") : <span>Pick date</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={value}
+          onSelect={onChange}
+          initialFocus
+          disabled={(date) => date < new Date()}
+        />
+      </PopoverContent>
+    </Popover>
+  </div>
+);
+
 const CabBookingPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -71,12 +105,14 @@ const CabBookingPage = () => {
   const customerTier = getCategoryTier(cabCategory);
 
   const [formData, setFormData] = useState({
-    customerName: '', // ✅ ADDED for {{1}}
-    tripType: '',
+    firstName: '',
+    lastName: '',
     phoneNumber: '',
     email: '',
     preferredDate: null as Date | null,
-    selectedRoute: ''
+    tripType: '',
+    selectedRoute: '',
+    vehiclePreference: selectedCab // ✅ NOT disabled — user can change
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,13 +127,91 @@ const CabBookingPage = () => {
     return route.prices[normalizedCab as keyof typeof route.prices] || 0;
   };
 
+  const sendWhatsAppMessage = async (
+    to: string,
+    firstName: string,
+    bookingId: string,
+    vehicle: string,
+    category: string,
+    route: string,
+    tripType: string,
+    price: string,
+    preferredDate: string,
+    phone: string,
+    email: string
+  ) => {
+    const cleanPhone = to.replace(/\D/g, '');
+    const formattedTo = '+' + cleanPhone;
+
+    const url = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`;
+
+    const cleanText = (text: string) => {
+      return text
+        .replace(/[\n\r\t]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    };
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: formattedTo,
+      type: "template",
+      template: {
+        name: "cabbooking_confirmation",
+        language: { code: "en" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: cleanText(firstName) },           // {{1}}
+              { type: "text", text: cleanText(bookingId) },           // {{2}}
+              { type: "text", text: cleanText(vehicle) },             // {{3}}
+              { type: "text", text: cleanText(category) },            // {{4}}
+              { type: "text", text: cleanText(route) },               // {{5}}
+              { type: "text", text: cleanText(tripType) },            // {{6}}
+              { type: "text", text: cleanText(price) },               // {{7}} — numeric
+              { type: "text", text: cleanText(preferredDate) },       // {{8}}
+              { type: "text", text: cleanText(phone) },               // {{9}}
+              { type: "text", text: cleanText(email) }                // {{10}}
+            ]
+          }
+        ]
+      }
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const responseText = await response.text();
+      if (!response.ok) {
+        let errorData = { error: responseText };
+        try { errorData = JSON.parse(responseText); } catch {}
+        console.error("❌ WhatsApp API Error:", errorData);
+        throw new Error(`Failed: ${response.status}`);
+      }
+
+      const result = JSON.parse(responseText);
+      console.log("✅ WhatsApp sent:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ WhatsApp failed:", error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // ✅ Validation (now includes customerName)
-    if (!formData.customerName || !formData.phoneNumber || !formData.preferredDate || !formData.email) {
-      alert('Please fill in all required fields: Name, Phone, Email, and Preferred Date');
+    // ✅ Validation
+    if (!formData.firstName || !formData.lastName || !formData.phoneNumber || !formData.preferredDate || !formData.email) {
+      alert('Please fill in all required fields: First Name, Last Name, Phone, Email, and Preferred Date');
       setIsSubmitting(false);
       return;
     }
@@ -110,78 +224,48 @@ const CabBookingPage = () => {
 
     const tripTypeLabel = formData.tripType === 'one-way' ? 'One Way' : 'Round Trip';
     const formattedDate = formData.preferredDate ? format(formData.preferredDate, "dd MMMM yyyy") : '';
-    const finalPrice = getRoutePrice(formData.selectedRoute); // ✅ Always numeric for WhatsApp API
-
-    // ✅ Generate Booking ID
+    const finalPrice = getRoutePrice(formData.selectedRoute).toString();
     const bookingId = `BT${new Date().getTime().toString().slice(-6)}`;
 
-    // ✅ Prepare data for WhatsApp & Email
-    const whatsappParams = {
-      messaging_product: "whatsapp",
-      to: formData.phoneNumber.replace(/\D/g, ""), // ✅ Remove non-digits for WhatsApp API
-      type: "template",
-      template: {
-        name: "cabbooking_confirmation",
-        language: { code: "en" },
-        components: [
-          {
-            type: "body",
-            parameters: [
-              { type: "text", text: formData.customerName },           // {{1}}
-              { type: "text", text: bookingId },                       // {{2}}
-              { type: "text", text: selectedCab },                     // {{3}}
-              { type: "text", text: customerTier },                    // {{4}}
-              { type: "text", text: formData.selectedRoute },          // {{5}}
-              { type: "text", text: tripTypeLabel },                   // {{6}}
-              { type: "text", text: finalPrice.toString() },           // {{7}} — numeric SAR
-              { type: "text", text: formattedDate },                   // {{8}}
-              { type: "text", text: formData.phoneNumber },            // {{9}}
-              { type: "text", text: formData.email }                   // {{10}}
-            ]
-          }
-        ]
-      }
-    };
-
     try {
-      // ✅ 1. Send WhatsApp via Business API
-      const waResponse = await fetch(`https://graph.facebook.com/v19.0/${PHONE_ID}/messages`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(whatsappParams)
-      });
+      // ✅ Send WhatsApp
+      await sendWhatsAppMessage(
+        formData.phoneNumber,
+        formData.firstName,
+        bookingId,
+        formData.vehiclePreference,
+        customerTier,
+        formData.selectedRoute,
+        tripTypeLabel,
+        finalPrice,
+        formattedDate,
+        formData.phoneNumber,
+        formData.email
+      );
 
-      if (!waResponse.ok) {
-        const error = await waResponse.json();
-        throw new Error(`WhatsApp API Error: ${JSON.stringify(error)}`);
-      }
-
-      // ✅ 2. Optional: Send Email via EmailJS
+      // ✅ Send Email (backup)
       await emailjs.send("service_xbv79li", "template_opvt35m", {
         booking_id: bookingId,
-        vehicle: selectedCab,
+        vehicle: formData.vehiclePreference,
         route: formData.selectedRoute,
         trip_type: tripTypeLabel,
         preferred_date: formattedDate,
         price: `${finalPrice} SAR`,
         phone: formData.phoneNumber,
         email: formData.email,
-        customer_name: formData.customerName
+        customer_name: `${formData.firstName} ${formData.lastName}`
       });
 
-      // ✅ 3. Redirect to confirmation page
+      // ✅ Redirect
       const urlParams = new URLSearchParams({
-        vehicle: selectedCab,
+        vehicle: formData.vehiclePreference,
         route: formData.selectedRoute,
         trip_type: tripTypeLabel,
         preferred_date: formattedDate,
         price: `${finalPrice} SAR`,
         phone: formData.phoneNumber,
         email: formData.email,
-        customer_name: formData.customerName,
+        customer_name: `${formData.firstName} ${formData.lastName}`,
         booking_id: bookingId,
         category: customerTier
       });
@@ -190,12 +274,14 @@ const CabBookingPage = () => {
 
       // ✅ Reset form
       setFormData({
-        customerName: '',
-        tripType: '',
+        firstName: '',
+        lastName: '',
         phoneNumber: '',
         email: '',
         preferredDate: null,
-        selectedRoute: ''
+        tripType: '',
+        selectedRoute: '',
+        vehiclePreference: selectedCab
       });
 
     } catch (error) {
@@ -210,190 +296,258 @@ const CabBookingPage = () => {
     <main className="min-h-screen bg-neutral-50">
       <Navigation />
 
-      <section className="pt-32 pb-12 px-6 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Book Your <span className="text-gold">Cab</span>
-          </h1>
-          <p className="text-xl text-neutral-200">
-            Selected: <strong className="text-gold">{selectedCab}</strong> • Category: <strong className="text-gold">{customerTier}</strong>
-          </p>
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="animate-fade-in-up">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+              Book Your <span className="text-gold">Cab</span>
+            </h1>
+            <p className="text-xl text-neutral-200 max-w-4xl mx-auto leading-relaxed">
+              Reserve your sacred transport with us and focus on what matters most — your spiritual journey
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="py-12 px-6">
+      {/* Booking Form + Sidebar */}
+      <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <Card className="shadow-elegant border-0 rounded-2xl">
-            <CardHeader className="pb-6">
-              <CardTitle className="text-2xl text-neutral-900 flex items-center gap-3">
-                <MapPin className="w-6 h-6 text-gold" />
-                Booking Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <form onSubmit={handleSubmit} className="space-y-8">
-
-                {/* ✅ Customer Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="customerName" className="text-base font-semibold text-neutral-700 flex items-center gap-2">
-                    <User className="w-4 h-4 text-gold" />
-                    Full Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="customerName"
-                    placeholder="Enter your full name"
-                    value={formData.customerName}
-                    onChange={(e) => handleInputChange('customerName', e.target.value)}
-                    className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
-                  />
-                </div>
-
-                {/* Trip Type */}
-                <div className="space-y-3">
-                  <Label className="text-base font-semibold text-neutral-700">
-                    Trip Type <span className="text-red-500">*</span>
-                  </Label>
-                  <RadioGroup
-                    value={formData.tripType}
-                    onValueChange={(value) => handleInputChange('tripType', value)}
-                    className="flex gap-6"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="one-way" id="one-way" />
-                      <Label htmlFor="one-way" className="font-medium">One Way</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Form */}
+            <div className="lg:col-span-2">
+              <Card className="border-0 shadow-elegant opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <CardHeader>
+                  <CardTitle className="text-3xl font-bold text-neutral-900">
+                    Cab Booking Details
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Fill in your information and we'll contact you to confirm your booking
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Personal Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name * <User className="w-4 h-4 inline ml-1 text-gold" /></Label>
+                        <Input
+                          id="firstName"
+                          value={formData.firstName}
+                          onChange={(e) => handleInputChange("firstName", e.target.value)}
+                          placeholder="Enter your first name"
+                          required
+                          className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name * <User className="w-4 h-4 inline ml-1 text-gold" /></Label>
+                        <Input
+                          id="lastName"
+                          value={formData.lastName}
+                          onChange={(e) => handleInputChange("lastName", e.target.value)}
+                          placeholder="Enter your last name"
+                          required
+                          className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="two-way" id="two-way" />
-                      <Label htmlFor="two-way" className="font-medium">Round Trip</Label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email Address * <Mail className="w-4 h-4 inline ml-1 text-gold" /></Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange("email", e.target.value)}
+                          placeholder="your.email@example.com"
+                          required
+                          className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number * <Phone className="w-4 h-4 inline ml-1 text-gold" /></Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={formData.phoneNumber}
+                          onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                          placeholder="+966 5X XXX XXXX"
+                          required
+                          className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
+                        />
+                      </div>
                     </div>
-                  </RadioGroup>
-                </div>
 
-                {/* Route Selection */}
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold text-neutral-700 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gold" />
-                    Select Route <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={formData.selectedRoute}
-                    onValueChange={(value) => handleInputChange('selectedRoute', value)}
-                  >
-                    <SelectTrigger className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl">
-                      <SelectValue placeholder="Choose your route" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {routes.map((route, idx) => (
-                        <SelectItem key={idx} value={route.name}>
-                          {route.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formData.selectedRoute && (
-                    <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 rounded-xl">
-                      <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="text-green-800 font-medium">
-                        Price for {selectedCab}: <span className="text-gold">{getRoutePrice(formData.selectedRoute)} SAR</span>
-                      </span>
+                    {/* Trip Type + Vehicle */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>Trip Type * <MapPin className="w-4 h-4 inline ml-1 text-gold" /></Label>
+                        <Select
+                          onValueChange={(value) => handleInputChange("tripType", value)}
+                          value={formData.tripType}
+                        >
+                          <SelectTrigger className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl">
+                            <SelectValue placeholder="Select trip type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="one-way">One Way</SelectItem>
+                            <SelectItem value="two-way">Round Trip</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Vehicle Preference <MapPin className="w-4 h-4 inline ml-1 text-gold" /></Label>
+                        <Select
+                          onValueChange={(value) => handleInputChange("vehiclePreference", value)}
+                          value={formData.vehiclePreference}
+                        >
+                          <SelectTrigger className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl">
+                            <SelectValue placeholder="Choose vehicle" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Camry">Toyota Camry</SelectItem>
+                            <SelectItem value="Sonata">Hyundai Sonata</SelectItem>
+                            <SelectItem value="H1 Hyundai">Hyundai H1</SelectItem>
+                            <SelectItem value="Hyundai Staria">Hyundai Staria</SelectItem>
+                            <SelectItem value="GMC">GMC Yukon</SelectItem>
+                            <SelectItem value="Hiace">Toyota Hiace</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Phone Number */}
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-base font-semibold text-neutral-700 flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gold" />
-                    Phone Number <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+966 5X XXX XXXX"
-                    value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
-                  />
-                </div>
-
-                {/* Email Address */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-base font-semibold text-neutral-700 flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gold" />
-                    Email Address <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="example@email.com"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
-                  />
-                </div>
-
-                {/* Preferred Date */}
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold text-neutral-700 flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-gold" />
-                    Preferred Date <span className="text-red-500">*</span>
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-12 w-full justify-start text-left font-normal border-neutral-200 focus:border-gold focus:ring-gold rounded-xl",
-                          !formData.preferredDate && "text-muted-foreground"
+                    {/* Route + Date */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>Route * <MapPin className="w-4 h-4 inline ml-1 text-gold" /></Label>
+                        <Select
+                          onValueChange={(value) => handleInputChange("selectedRoute", value)}
+                          value={formData.selectedRoute}
+                        >
+                          <SelectTrigger className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl">
+                            <SelectValue placeholder="Choose your route" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {routes.map((route, idx) => (
+                              <SelectItem key={idx} value={route.name}>
+                                {route.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {formData.selectedRoute && (
+                          <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 rounded-xl">
+                            <DollarSign className="w-4 h-4 text-green-600" />
+                            <span className="text-green-800 font-medium">
+                              Price: <span className="text-gold">{getRoutePrice(formData.selectedRoute)} SAR</span>
+                            </span>
+                          </div>
                         )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-gold" />
-                        {formData.preferredDate ? format(formData.preferredDate, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={formData.preferredDate}
-                        onSelect={(date) => handleInputChange('preferredDate', date)}
-                        initialFocus
-                        disabled={(date) => date < new Date()}
+                      </div>
+                      <DatePickerPopover
+                        value={formData.preferredDate}
+                        onChange={(date) => handleInputChange('preferredDate', date)}
+                        label="Preferred Date *"
+                        required={true}
                       />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                    </div>
 
-                {/* Vehicle Preference (Readonly) */}
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold text-neutral-700">Vehicle</Label>
-                  <Input
-                    value={formData.vehiclePreference || selectedCab}
-                    placeholder="Vehicle preference"
-                    className="h-12 border-neutral-200 focus:border-gold focus:ring-gold rounded-xl"
-                    disabled
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {selectedCab} → Matched as: {normalizedCab} → Tier: {customerTier}
-                  </p>
-                </div>
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      className="w-full bg-gold hover:bg-gold-dark text-white py-3 text-lg font-semibold rounded-lg transition-colors"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center space-x-2">
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.133 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Sending Request...</span>
+                        </span>
+                      ) : (
+                        "Submit Booking Request"
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
 
-                {/* Submit Button */}
-                <div className="pt-6 border-t border-neutral-200">
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="w-full bg-gold hover:bg-gold-dark text-white text-lg font-semibold h-14 rounded-xl"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Processing..." : "Confirm Booking"}
-                  </Button>
-                  <p className="text-sm text-muted-foreground text-center mt-3">
-                    You will receive a WhatsApp confirmation instantly and a call within 30 minutes.
-                  </p>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Contact Info */}
+              <Card className="border-0 shadow-soft opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-neutral-900 mb-4">Need Immediate Assistance?</h3>
+                  <div className="space-y-4">
+                    {/* Phone Call Link */}
+                    <a
+                      href="tel:+923218203904"
+                      className="flex items-center space-x-3 p-3 rounded-lg border border-transparent hover:border-green-400 hover:bg-green-50 hover:text-green-700 hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out cursor-pointer group"
+                    >
+                      <Phone className="w-5 h-5 text-gold group-hover:rotate-12 transition-transform duration-300" />
+                      <div>
+                        <p className="font-medium group-hover:text-green-600 transition-colors">Call Us</p>
+                        <p className="text-sm text-muted-foreground group-hover:text-green-500 transition-colors">
+                          +923218203904
+                        </p>
+                      </div>
+                    </a>
+
+                    {/* WhatsApp Link */}
+                    <a
+                      href={`https://wa.me/+966559572454?text=${encodeURIComponent(
+                        "Assalamu Alaikum, I'd like to book a cab for pilgrimage transport."
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-3 p-3 rounded-lg border border-transparent hover:border-green-400 hover:bg-green-50 hover:text-green-700 hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out cursor-pointer group"
+                    >
+                      <MessageCircle className="w-5 h-5 text-gold group-hover:rotate-12 transition-transform duration-300 animate-pulse-slow" />
+                      <div>
+                        <p className="font-medium group-hover:text-green-600 transition-colors">WhatsApp</p>
+                        <p className="text-sm text-muted-foreground group-hover:text-green-500 transition-colors">
+                          +966559572454
+                        </p>
+                      </div>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Why Book With Us */}
+              <Card className="border-0 shadow-soft opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-neutral-900 mb-4">Why Book With Us?</h3>
+                  {[{
+                    title: "Licensed & Insured",
+                    desc: "Fully licensed transport service"
+                  }, {
+                    title: "Expert Local Drivers",
+                    desc: "Knowledgeable about all holy sites"
+                  }, {
+                    title: "24/7 Support",
+                    desc: "Round-the-clock assistance"
+                  }, {
+                    title: "Modern Fleet",
+                    desc: "Clean, comfortable vehicles"
+                  }].map((item, idx) => (
+                    <div key={idx} className="flex items-start space-x-3 my-3">
+                      <CheckCircle className="w-5 h-5 text-gold mt-0.5" />
+                      <div>
+                        <p className="font-medium text-sm">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </section>
 
