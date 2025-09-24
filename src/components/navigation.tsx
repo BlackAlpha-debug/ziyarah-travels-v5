@@ -45,7 +45,7 @@ const Navigation = () => {
             <h1 className={`text-xl font-bold transition-colors ${
               isScrolled ? 'text-neutral-900' : 'text-white'
             }`}>
-              Ziyara Travels
+              Ziyarah Travels
             </h1>
             <p className={`text-sm transition-colors ${
               isScrolled ? 'text-muted-foreground' : 'text-neutral-200'
