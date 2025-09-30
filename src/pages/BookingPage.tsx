@@ -134,7 +134,7 @@ const sendWhatsAppMessage = async (
   specialRequests: string
 ) => {
   const PHONE_ID = "780619091801476";
-  const TOKEN = "EAAYWCLCijuABPq4nuBakS3mlZCTvd1lZAsf9UhGCNukjQgJOXVAt7CZAfU6w8CQj6Iqs1bMpxJFlQmGFjM3qiEY3ZBfMfPZCdzZCAK2aUJg5Opoa6Pc8c7C4cQFakeZAAeJM8VYEQZBXoNAlBRBDpNNIyN4ZCRqeMxBvs0H8DPWHo0Fgv9stiBJBHkimKPki4zYCnDS6vwfPDcBOhjHJMm1UrZA1j7XwrV44ETrgffSnRZAVpCvYAZDZD";
+  const TOKEN = "EAAYWCLCijuABPuTHBokaLTWnTilJ1BLWXD2H0J8ZBzMGomQqYPNKpQ7u8hnVZB8g5EmrzgC87RhUs6KfWErP3O1lFDZCqX8AoPzFsbQdZAO4AFkM2JsQOXLvaZBcnzsFKmZCxZCqakHbcmDmvvHcjSGx6ekqMWuKsZAr7foVM7w38J3ZBU99zZAWbb4I6QdfGvt9IenAZDZD";
 
   // Clean phone
   const cleanPhone = to.replace(/\D/g, '');
