@@ -413,7 +413,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => handleInputChange("phone", e.target.value)}
-                          placeholder="923055754320 (no + needed)"
+                          placeholder="+966 XX XXX XXXX"
                           required
                         />
                       </div>
