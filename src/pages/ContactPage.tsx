@@ -91,7 +91,6 @@ const ContactPage = () => {
                 <CardContent className="p-6">
                   <Phone className="w-12 h-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                   <h3 className="text-lg font-bold text-neutral-900 mb-2">Phone</h3>
-                  <p className="text-muted-foreground text-sm mb-3">Call us directly</p>
                   <p className="text-blue-600 font-medium hover:underline">
                     +966 55 957 2454
                   </p>
@@ -105,7 +104,6 @@ const ContactPage = () => {
                 <CardContent className="p-6">
                   <MessageCircle className="w-12 h-12 text-green-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                   <h3 className="text-lg font-bold text-neutral-900 mb-2">WhatsApp</h3>
-                  <p className="text-muted-foreground text-sm mb-3">Quick messaging</p>
                   <p className="text-green-600 font-medium hover:underline">
                     Message Us
                   </p>
@@ -119,7 +117,6 @@ const ContactPage = () => {
                 <CardContent className="p-6">
                   <Mail className="w-12 h-12 text-purple-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                   <h3 className="text-lg font-bold text-neutral-900 mb-2">Email</h3>
-                  <p className="text-muted-foreground text-sm mb-3">Send us details</p>
                   <p className="text-purple-600 font-medium hover:underline break-all">
                     Ziyarahtarvels.info@gmail.com
                   </p>
@@ -133,7 +130,6 @@ const ContactPage = () => {
                 <CardContent className="p-6">
                   <MapPin className="w-12 h-12 text-amber-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                   <h3 className="text-lg font-bold text-neutral-900 mb-2">Location</h3>
-                  <p className="text-muted-foreground text-sm mb-3">Visit our office</p>
                   <p className="text-amber-600 font-medium hover:underline">
                     Makkah, Saudi Arabia
                   </p>
