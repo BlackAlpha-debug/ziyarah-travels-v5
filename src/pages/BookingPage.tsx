@@ -104,7 +104,7 @@ const BookingPage = () => {
     jeddahToMakkah: undefined,
     makkahToMadinah: undefined,
     madinahToAirport: undefined
-  } as Record<string, Date | undefined>);
+  });
 
   // Umrah Premium Dates
   const [umrahPremiumDates, setUmrahPremiumDates] = useState({
@@ -112,95 +112,101 @@ const BookingPage = () => {
     makkahToMadinah: undefined,
     madinahToMakkah: undefined,
     makkahToJeddah: undefined
-  } as Record<string, Date | undefined>);
+  });
 
   const [selectedVehicle, setSelectedVehicle] = useState<string>("");
 
   const handleInputChange = (field: string, value: string) =>
     setFormData(prev => ({ ...prev, [field]: value }));
 
-  // Reset Umrah state when switching package
+  // Reset Umrah state AND clear extra fields when switching away from Umrah packages
   useEffect(() => {
     if (formData.package !== "umrah" && formData.package !== "essential") {
       setUmrahExpressDates({ jeddahToMakkah: undefined, makkahToMadinah: undefined, madinahToAirport: undefined });
       setUmrahPremiumDates({ jeddahToMakkah: undefined, makkahToMadinah: undefined, madinahToMakkah: undefined, makkahToJeddah: undefined });
       setSelectedVehicle("");
+      // Clear fields not used in non-Umrah packages
+      setFormData(prev => ({
+        ...prev,
+        pickup: "",
+        destination: "",
+        tripType: "",
+        carModel: ""
+      }));
     }
   }, [formData.package]);
-const sendWhatsAppMessage = async (
-  to: string,
-  firstName: string,
-  bookingDetails: string,
-  specialRequests: string
-) => {
-  const PHONE_ID = "780619091801476";
-  const TOKEN = "EAAYWCLCijuABPuTHBokaLTWnTilJ1BLWXD2H0J8ZBzMGomQqYPNKpQ7u8hnVZB8g5EmrzgC87RhUs6KfWErP3O1lFDZCqX8AoPzFsbQdZAO4AFkM2JsQOXLvaZBcnzsFKmZCxZCqakHbcmDmvvHcjSGx6ekqMWuKsZAr7foVM7w38J3ZBU99zZAWbb4I6QdfGvt9IenAZDZD";
 
-  // Clean phone
-  const cleanPhone = to.replace(/\D/g, '');
-  const formattedTo = '+' + cleanPhone;
-  const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
+  const sendWhatsAppMessage = async (
+    to: string,
+    firstName: string,
+    bookingDetails: string,
+    specialRequests: string
+  ) => {
+    const PHONE_ID = "780619091801476";
+    const TOKEN = "EAAYWCLCijuABPuTHBokaLTWnTilJ1BLWXD2H0J8ZBzMGomQqYPNKpQ7u8hnVZB8g5EmrzgC87RhUs6KfWErP3O1lFDZCqX8AoPzFsbQdZAO4AFkM2JsQOXLvaZBcnzsFKmZCxZCqakHbcmDmvvHcjSGx6ekqMWuKsZAr7foVM7w38J3ZBU99zZAWbb4I6QdfGvt9IenAZDZD";
 
-  // ✅ SIMPLE CLEANER — REMOVES ONLY ILLEGAL CHARS
-  const cleanText = (text: string) => {
-    return text
-      .replace(/[\n\r\t]/g, ' ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-  };
+    const cleanPhone = to.replace(/\D/g, '');
+    const formattedTo = '+' + cleanPhone;
+    const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
 
-  const payload = {
-    messaging_product: "whatsapp",
-    to: formattedTo,
-    type: "template",
-    template: {
-      name: "booking_confirmation",
-      language: { code: "en" },
-      components: [
-        {
-          type: "body",
-          parameters: [
-            { type: "text", text: cleanText(firstName) },
-            { type: "text", text: cleanText(bookingDetails) },
-            { type: "text", text: cleanText(specialRequests || "None") }
-          ]
-        }
-      ]
+    const cleanText = (text: string) => {
+      return text
+        .replace(/[\n\r\t]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    };
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: formattedTo,
+      type: "template",
+      template: {
+        name: "booking_confirmation",
+        language: { code: "en" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: cleanText(firstName) },
+              { type: "text", text: cleanText(bookingDetails) },
+              { type: "text", text: cleanText(specialRequests || "None") }
+            ]
+          }
+        ]
+      }
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const responseText = await response.text();
+      console.log("📤 WhatsApp Raw Response:", responseText);
+
+      if (!response.ok) {
+        let errorData = { error: responseText };
+        try { errorData = JSON.parse(responseText); } catch {}
+        console.error("❌ WhatsApp API Error:", errorData);
+        throw new Error(`Failed: ${response.status}`);
+      }
+
+      const result = JSON.parse(responseText);
+      console.log("✅ WhatsApp sent:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ WhatsApp failed:", error);
     }
   };
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const responseText = await response.text();
-    console.log("📤 WhatsApp Raw Response:", responseText);
-
-    if (!response.ok) {
-      let errorData = { error: responseText };
-      try { errorData = JSON.parse(responseText); } catch {}
-      console.error("❌ WhatsApp API Error:", errorData);
-      throw new Error(`Failed: ${response.status}`);
-    }
-
-    const result = JSON.parse(responseText);
-    console.log("✅ WhatsApp sent:", result);
-    return result;
-  } catch (error) {
-    console.error("❌ WhatsApp failed:", error);
-  }
-};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate email
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
       alert("Please enter a valid email address.");
       return;
@@ -269,7 +275,6 @@ Pickup Location: ${formData.pickup || "Not selected"}
     try {
       setIsSubmitting(true);
 
-      // ✅ SEND EMAIL — UNCHANGED
       await send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
@@ -279,7 +284,6 @@ Pickup Location: ${formData.pickup || "Not selected"}
 
       console.log("✅ Email sent successfully!");
 
-      // ✅ SEND WHATSAPP TEMPLATE
       sendWhatsAppMessage(
         formData.phone,
         formData.firstName,
@@ -287,9 +291,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
         formData.specialRequests
       );
 
-      // ✅ REDIRECT AFTER SENDING
       navigate("/booking-confirmation", { replace: true });
-
     } catch (error) {
       console.error("❌ Failed to send email:", error);
       alert("There was an error submitting your request. Please try again or contact us directly.");
@@ -299,10 +301,8 @@ Pickup Location: ${formData.pickup || "Not selected"}
   };
 
   const isUmrahPackage = formData.package === "umrah" || formData.package === "essential";
-  const isNonePackage = formData.package === "none";
-  const isOtherPackage = !isNonePackage && !isUmrahPackage;
 
-  // ✅ Reusable Calendar Popover Component for Consistency
+  // ✅ Reusable Calendar Popover Component
   const DatePickerPopover = ({
     value,
     onChange,
@@ -419,138 +419,29 @@ Pickup Location: ${formData.pickup || "Not selected"}
                       </div>
                     </div>
 
-                    {/* === PACKAGE + DATE ROW === */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Package Type */}
-                      <div className="space-y-2">
-                        <Label>Package Type *</Label>
-                        <Select
-                          onValueChange={(value) => handleInputChange("package", value)}
-                          value={formData.package}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select package" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {packages.map(pkg => (
-                              <SelectItem key={pkg.value} value={pkg.value}>
-                                {pkg.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Preferred Date (for None and Other packages) */}
-                      {(isNonePackage || isOtherPackage) && (
-                        <DatePickerPopover
-                          value={date}
-                          onChange={setDate}
-                          label="Preferred Date"
-                          required={true}
-                        />
-                      )}
+                    {/* === PACKAGE SELECTION ONLY === */}
+                    <div className="space-y-2">
+                      <Label>Package Type *</Label>
+                      <Select
+                        onValueChange={(value) => handleInputChange("package", value)}
+                        value={formData.package}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select package" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {packages.map(pkg => (
+                            <SelectItem key={pkg.value} value={pkg.value}>
+                              {pkg.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    {/* === CONDITIONAL FIELDS === */}
+                    {/* === ONLY SHOW EXTRA FIELDS FOR UMRAH PACKAGES === */}
 
-                    {/* For "None" Package — Show Trip Type & Vehicle */}
-                    {isNonePackage && (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label>Pickup Location *</Label>
-                            <Select
-                              onValueChange={(value) => handleInputChange("pickup", value)}
-                              value={formData.pickup}
-                              required
-                            >
-                              <SelectTrigger><SelectValue placeholder="Select pickup" /></SelectTrigger>
-                              <SelectContent>
-                                {pickupLocations.map(location => (
-                                  <SelectItem key={location} value={location}>
-                                    {location}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Destination *</Label>
-                            <Select
-                              onValueChange={(value) => handleInputChange("destination", value)}
-                              value={formData.destination}
-                              required
-                            >
-                              <SelectTrigger><SelectValue placeholder="Select destination" /></SelectTrigger>
-                              <SelectContent>
-                                {destinations.map(dest => (
-                                  <SelectItem key={dest} value={dest}>
-                                    {dest}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label>Trip Type *</Label>
-                            <Select
-                              onValueChange={(value) => handleInputChange("tripType", value)}
-                              value={formData.tripType}
-                              required
-                            >
-                              <SelectTrigger><SelectValue placeholder="Select trip type" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="one-way">One Way</SelectItem>
-                                <SelectItem value="round-trip">Round Trip</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Vehicle Preference</Label>
-                            <Select
-                              onValueChange={(value) => handleInputChange("carModel", value)}
-                              value={formData.carModel}
-                            >
-                              <SelectTrigger><SelectValue placeholder="Choose vehicle" /></SelectTrigger>
-                              <SelectContent>
-                                {carModels.map(model => (
-                                  <SelectItem key={model} value={model}>
-                                    {model}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* For Other Packages (Hajj, Luxury, etc.) — Only Pickup */}
-                    {isOtherPackage && (
-                      <div className="space-y-2">
-                        <Label>Pickup Location *</Label>
-                        <Select
-                          onValueChange={(value) => handleInputChange("pickup", value)}
-                          value={formData.pickup}
-                          required
-                        >
-                          <SelectTrigger><SelectValue placeholder="Select pickup location" /></SelectTrigger>
-                          <SelectContent>
-                            {pickupLocations.map(location => (
-                              <SelectItem key={location} value={location}>
-                                {location}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {/* For Umrah Express — Show Route Dates + Vehicle Selection */}
+                    {/* For Umrah Express */}
                     {formData.package === "umrah" && (
                       <>
                         <div className="col-span-full">
@@ -585,7 +476,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
                       </>
                     )}
 
-                    {/* For Umrah Premium — Show Route Dates + Vehicle Selection */}
+                    {/* For Umrah Premium */}
                     {formData.package === "essential" && (
                       <>
                         <div className="col-span-full">
@@ -621,7 +512,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
                       </>
                     )}
 
-                    {/* Special Requests */}
+                    {/* Special Requests — shown for all */}
                     <div className="space-y-2">
                       <Label htmlFor="requests">Special Requests or Notes</Label>
                       <Textarea
@@ -656,14 +547,13 @@ Pickup Location: ${formData.pickup || "Not selected"}
               </Card>
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar — unchanged */}
             <div className="space-y-6">
               {/* Contact Info */}
               <Card className="border-0 shadow-soft opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold text-neutral-900 mb-4">Need Immediate Assistance?</h3>
                   <div className="space-y-4">
-                    {/* Phone Call Link */}
                     <a
                       href="tel:+923218203904"
                       className="flex items-center space-x-3 p-3 rounded-lg border border-transparent hover:border-green-400 hover:bg-green-50 hover:text-green-700 hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out cursor-pointer group"
@@ -677,7 +567,6 @@ Pickup Location: ${formData.pickup || "Not selected"}
                       </div>
                     </a>
 
-                    {/* WhatsApp Link */}
                     <a
                       href={`https://wa.me/+966559572454?text=${encodeURIComponent(
                         "Assalamu Alaikum, I'd like to inquire about your pilgrimage transport services."
@@ -730,7 +619,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer — unchanged */}
       <footer className="bg-neutral-900 text-white py-12 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <div className="mb-8">
