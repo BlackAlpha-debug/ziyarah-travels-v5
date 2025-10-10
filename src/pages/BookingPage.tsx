@@ -14,45 +14,31 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { send } from "@emailjs/browser";
-
+import Footer from "../components/Footer";
 // ==================== DATA ====================
 
-const pickupLocations = [
-  "King Abdulaziz International Airport", "Prince Mohammed bin Abdulaziz Airport",
-  "Madinah Airport", "Makkah Hotels", "Madinah Hotels",
-  "Jeddah Hotels", "Masjid-e-Haram", "Masjid-Nabwi","Miqat Dhu al-Hulayfah",
-  "Masjid at-Taneem","Madain Saleh","Aziziyah District",
-  "Al-Hijra District", "Ajyad District", "Al-Misfalah District", "Al-Jamiah District",
-];
-
-const destinations = [
-  "Holy Makkah",
-  "Al-Ghars Well",
-  "Madinah Al-Munawwarah",
-  "Quba Mosque",
-  "Mount Uhud",
-  "Masjid al-Qiblatayn",
-  "Mina Valley",
-  "Be'er Shifa",
-  "Valley Jin",
-  "Jabal Thawr",
-  "Masjid Aisha (Masjid at-Taneem)",
-  "Jabal al-Nour (Hira Cave)",
-  "Jannat al-Mu'alla Cemetery",
-  "Muzdalifah",
-  "Arafat (Jabal al-Rahmah)",
-  "Jamarat (Stoning site)",
-  "Masjid an-Nabawi",
-  "Rawdah ash-Sharifah",
-  "Jannat al-Baqi Cemetery",
-  "Masjid Ghamama",
-  "Masjid Abu Bakr",
-  "Masjid Umar ibn al-Khattab",
-  "Battlefield of Badr",
-  "Ta’if (Masjid Addas & Shubra Palace)",
-  "Khaybar",
-  "Madain Saleh",
-  "Masjid Salman al-Farisi"
+// ✅ NEW: Madinah Hotels for Ziyarat
+const madinahHotels = [
+  "Pullman Zamzam Madina",
+  "Saja Al Madinah Hotel",
+  "Al Manakha Rotana Madinah",
+  "Sofitel Shahd Al Madinah Hotel",
+  "Elaf Al Taqwa Hotel",
+  "Madinah Hilton Hotel",
+  "Dallah Taibah Hotel",
+  "Anwar Al Madinah Mövenpick",
+  "Crowne Plaza Madinah",
+  "Taiba Madinah Hotel",
+  "InterContinental Dar Al Iman Madinah",
+  "Al Aqeeq Madinah Hotel",
+  "The Oberoi Madina",
+  "Emaar Royal Hotel",
+  "Golden Tulip Al Shakreen",
+  "Zaha Al Munawwarah Hotel",
+  "View Al Madinah Hotel",
+  "Belvedere Hotel",
+  "Le Bosphorus Al Madinah Hotel",
+  "Rua Al Hijrah Hotel"
 ];
 
 const carModels = [
@@ -114,16 +100,24 @@ const BookingPage = () => {
     makkahToJeddah: undefined
   });
 
+  // ✅ NEW: Madina Ziyarat State
+  const [madinahZiyarat, setMadinahZiyarat] = useState({
+    pickup: "",
+    date: undefined as Date | undefined,
+    timing: ""
+  });
+
   const [selectedVehicle, setSelectedVehicle] = useState<string>("");
 
   const handleInputChange = (field: string, value: string) =>
     setFormData(prev => ({ ...prev, [field]: value }));
 
-  // Reset Umrah state AND clear extra fields when switching away from Umrah packages
+  // Reset Umrah AND Madina state when switching away
   useEffect(() => {
-    if (formData.package !== "umrah" && formData.package !== "essential") {
+    if (formData.package !== "umrah" && formData.package !== "essential" && formData.package !== "historical") {
       setUmrahExpressDates({ jeddahToMakkah: undefined, makkahToMadinah: undefined, madinahToAirport: undefined });
       setUmrahPremiumDates({ jeddahToMakkah: undefined, makkahToMadinah: undefined, madinahToMakkah: undefined, makkahToJeddah: undefined });
+      setMadinahZiyarat({ pickup: "", date: undefined, timing: "" });
       setSelectedVehicle("");
       // Clear fields not used in non-Umrah packages
       setFormData(prev => ({
@@ -136,40 +130,48 @@ const BookingPage = () => {
     }
   }, [formData.package]);
 
+  // ✅ UPDATED: WhatsApp sender for 10-parameter template
   const sendWhatsAppMessage = async (
     to: string,
-    firstName: string,
-    bookingDetails: string,
-    specialRequests: string
+    p1_firstName: string,
+    p2_packageName: string,
+    p3_bookingId: string,
+    p4_route1: string,
+    p5_route2: string,
+    p6_route3: string,
+    p7_route4: string,
+    p8_vehicle: string,
+    p9_specialRequests: string,
+    p10_contact: string
   ) => {
     const PHONE_ID = "780619091801476";
     const TOKEN = "EAAYWCLCijuABPuTHBokaLTWnTilJ1BLWXD2H0J8ZBzMGomQqYPNKpQ7u8hnVZB8g5EmrzgC87RhUs6KfWErP3O1lFDZCqX8AoPzFsbQdZAO4AFkM2JsQOXLvaZBcnzsFKmZCxZCqakHbcmDmvvHcjSGx6ekqMWuKsZAr7foVM7w38J3ZBU99zZAWbb4I6QdfGvt9IenAZDZD";
 
     const cleanPhone = to.replace(/\D/g, '');
     const formattedTo = '+' + cleanPhone;
-    const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
-
-    const cleanText = (text: string) => {
-      return text
-        .replace(/[\n\r\t]/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-    };
+    const url = `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`; // Fixed spacing
 
     const payload = {
       messaging_product: "whatsapp",
       to: formattedTo,
       type: "template",
       template: {
-        name: "booking_confirmation",
+        name: "package_booking", // ✅ Correct template name
         language: { code: "en" },
         components: [
           {
             type: "body",
             parameters: [
-              { type: "text", text: cleanText(firstName) },
-              { type: "text", text: cleanText(bookingDetails) },
-              { type: "text", text: cleanText(specialRequests || "None") }
+              { type: "text", text: p1_firstName },
+              { type: "text", text: p2_packageName },
+              { type: "text", text: p3_bookingId },
+              { type: "text", text: p4_route1 },
+              { type: "text", text: p5_route2 },
+              { type: "text", text: p6_route3 },
+              { type: "text", text: p7_route4 },
+              { type: "text", text: p8_vehicle },
+              { type: "text", text: p9_specialRequests || "None" },
+              { type: "text", text: p10_contact }
             ]
           }
         ]
@@ -233,9 +235,10 @@ Package: Umrah Express
 Vehicle: ${selectedVehicle || "Not selected"}
 
 Route Dates:
-• Jeddah Airport → Makkah Hotel: ${umrahExpressDates.jeddahToMakkah ? format(umrahExpressDates.jeddahToMakkah, "PPP") : "Not selected"}
-• Makkah Hotel → Madinah Hotel: ${umrahExpressDates.makkahToMadinah ? format(umrahExpressDates.makkahToMadinah, "PPP") : "Not selected"}
-• Madinah Hotel → Madinah Airport: ${umrahExpressDates.madinahToAirport ? format(umrahExpressDates.madinahToAirport, "PPP") : "Not selected"}
+Jeddah Airport → Makkah Hotel: ${umrahExpressDates.jeddahToMakkah ? format(umrahExpressDates.jeddahToMakkah, "PPP") : "Not selected"}
+Makkah Hotel → Madinah Hotel: ${umrahExpressDates.makkahToMadinah ? format(umrahExpressDates.makkahToMadinah, "PPP") : "Not selected"}
+Madinah Hotel → Madinah Airport: ${umrahExpressDates.madinahToAirport ? format(umrahExpressDates.madinahToAirport, "PPP") : "Not selected"}
+• End of journey
       `.trim();
     }
     // --- UMRAH PREMIUM ---
@@ -245,10 +248,24 @@ Package: Umrah Premium
 Vehicle: ${selectedVehicle || "Not selected"}
 
 Route Dates:
-• Jeddah Airport → Makkah Hotel: ${umrahPremiumDates.jeddahToMakkah ? format(umrahPremiumDates.jeddahToMakkah, "PPP") : "Not selected"}
-• Makkah Hotel → Madinah: ${umrahPremiumDates.makkahToMadinah ? format(umrahPremiumDates.makkahToMadinah, "PPP") : "Not selected"}
-• Madinah Hotel → Makkah: ${umrahPremiumDates.madinahToMakkah ? format(umrahPremiumDates.madinahToMakkah, "PPP") : "Not selected"}
+Jeddah Airport → Makkah Hotel: ${umrahPremiumDates.jeddahToMakkah ? format(umrahPremiumDates.jeddahToMakkah, "PPP") : "Not selected"}
+Makkah Hotel → Madinah: ${umrahPremiumDates.makkahToMadinah ? format(umrahPremiumDates.makkahToMadinah, "PPP") : "Not selected"}
+Madinah Hotel → Makkah: ${umrahPremiumDates.madinahToMakkah ? format(umrahPremiumDates.madinahToMakkah, "PPP") : "Not selected"}
 • Makkah Hotel → Jeddah Airport: ${umrahPremiumDates.makkahToJeddah ? format(umrahPremiumDates.makkahToJeddah, "PPP") : "Not selected"}
+      `.trim();
+    }
+    // --- MADINA ZIYARAT ---
+    else if (formData.package === "historical") {
+      const formattedDate = madinahZiyarat.date ? format(madinahZiyarat.date, "PPP") : "Not selected";
+      bookingDetails = `
+Package: Madina City Ziyarat
+Vehicle: ${selectedVehicle || "Not specified"}
+
+Details:
+Pickup: ${madinahZiyarat.pickup || "Not selected"}
+Preferred Date: ${formattedDate}
+Timing: ${madinahZiyarat.timing || "Not selected"}
+• End of journey
       `.trim();
     }
     // --- OTHER PACKAGES ---
@@ -284,12 +301,65 @@ Pickup Location: ${formData.pickup || "Not selected"}
 
       console.log("✅ Email sent successfully!");
 
-      sendWhatsAppMessage(
-        formData.phone,
-        formData.firstName,
-        bookingDetails,
-        formData.specialRequests
-      );
+      // ✅ NEW: WhatsApp Logic for 3 packages
+      const bookingId = "ZT" + Math.floor(100000 + Math.random() * 900000);
+      const formatDate = (d: Date | undefined) => d ? format(d, "d MMMM yyyy") : "Not selected";
+
+      if (formData.package === "essential") {
+        // Umrah Premium
+        const r1 = `Jeddah-Makkah: ${formatDate(umrahPremiumDates.jeddahToMakkah)}`;
+        const r2 = `Jeddah-Madinah: ${formatDate(umrahPremiumDates.makkahToMadinah)}`;
+        const r3 = `Madina-Makkah: ${formatDate(umrahPremiumDates.madinahToMakkah)}`;
+        const r4 = `• Makkah-Jeddah: ${formatDate(umrahPremiumDates.makkahToJeddah)}`;
+
+        sendWhatsAppMessage(
+          formData.phone,
+          formData.firstName,
+          "Umrah Premium",
+          bookingId,
+          r1, r2, r3, r4,
+          selectedVehicle || "Not specified",
+          formData.specialRequests,
+          formData.phone
+        );
+      } 
+      else if (formData.package === "umrah") {
+        // Umrah Express
+        const r1 = `Jeddah Airport-Makkah Hotel: ${formatDate(umrahExpressDates.jeddahToMakkah)}`;
+        const r2 = `Makkah Hotel-Madinah Hotel: ${formatDate(umrahExpressDates.makkahToMadinah)}`;
+        const r3 = `Madinah Hotel-Madinah Airport: ${formatDate(umrahExpressDates.madinahToAirport)}`;
+        const r4 = `• End of journey`;
+
+        sendWhatsAppMessage(
+          formData.phone,
+          formData.firstName,
+          "Umrah Express",
+          bookingId,
+          r1, r2, r3, r4,
+          selectedVehicle || "Not specified",
+          formData.specialRequests,
+          formData.phone
+        );
+      }
+      else if (formData.package === "historical") {
+        // Madina City Ziyarat
+        const r1 = `Pickup: ${madinahZiyarat.pickup}`;
+        const r2 = `Preferred Date: ${formatDate(madinahZiyarat.date)}`;
+        const r3 = `Timing: ${madinahZiyarat.timing}`;
+        const r4 = `• End of journey`;
+
+        sendWhatsAppMessage(
+          formData.phone,
+          formData.firstName,
+          "Madina City Ziyarat",
+          bookingId,
+          r1, r2, r3, r4,
+          selectedVehicle || "Not specified",
+          formData.specialRequests,
+          formData.phone
+        );
+      }
+      // Other packages: no WhatsApp
 
       navigate("/booking-confirmation", { replace: true });
     } catch (error) {
@@ -468,8 +538,11 @@ Pickup Location: ${formData.pickup || "Not selected"}
                           <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
                             <SelectTrigger><SelectValue placeholder="Choose vehicle" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Hyundai Staria">Hyundai Staria</SelectItem>
-                              <SelectItem value="Hyundai H1">Hyundai H1</SelectItem>
+                              {carModels.map(model => (
+                                <SelectItem key={model} value={model}>
+                                  {model}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -504,10 +577,79 @@ Pickup Location: ${formData.pickup || "Not selected"}
                           <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
                             <SelectTrigger><SelectValue placeholder="Choose vehicle" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Hyundai Staria">Hyundai Staria</SelectItem>
-                              <SelectItem value="Hyundai H1">Hyundai H1</SelectItem>
+                              {carModels.map(model => (
+                                <SelectItem key={model} value={model}>
+                                  {model}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                      </>
+                    )}
+
+                    {/* ✅ NEW: Madina City Ziyarat Fields */}
+                    {formData.package === "historical" && (
+                      <>
+                        <div className="col-span-full space-y-4">
+                          <h4 className="text-lg font-semibold text-neutral-800">Madina City Ziyarat Details</h4>
+                          
+                          <div className="space-y-2">
+                            <Label>Pickup Location *</Label>
+                            <Select
+                              value={madinahZiyarat.pickup}
+                              onValueChange={(v) => setMadinahZiyarat(prev => ({ ...prev, pickup: v }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select hotel" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {madinahHotels.map(hotel => (
+                                  <SelectItem key={hotel} value={hotel}>
+                                    {hotel}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <DatePickerPopover
+                            label="Preferred Date *"
+                            value={madinahZiyarat.date}
+                            onChange={(d) => setMadinahZiyarat(prev => ({ ...prev, date: d }))}
+                            required={true}
+                          />
+
+                          <div className="space-y-2">
+                            <Label>Timing *</Label>
+                            <Select
+                              value={madinahZiyarat.timing}
+                              onValueChange={(v) => setMadinahZiyarat(prev => ({ ...prev, timing: v }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select timing" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Morning (8:00 AM - 12:00 PM)">Morning (8:00 AM - 12:00 PM)</SelectItem>
+                                <SelectItem value="Afternoon (12:00 PM - 4:00 PM)">Afternoon (12:00 PM - 4:00 PM)</SelectItem>
+                                <SelectItem value="Evening (4:00 PM - 8:00 PM)">Evening (4:00 PM - 8:00 PM)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="col-span-full space-y-2">
+                            <Label>Vehicle Preference *</Label>
+                            <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
+                              <SelectTrigger><SelectValue placeholder="Choose vehicle" /></SelectTrigger>
+                              <SelectContent>
+                                {carModels.map(model => (
+                                  <SelectItem key={model} value={model}>
+                                    {model}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </>
                     )}
@@ -618,27 +760,7 @@ Pickup Location: ${formData.pickup || "Not selected"}
           </div>
         </div>
       </section>
-
-      {/* Footer — unchanged */}
-      <footer className="bg-neutral-900 text-white py-12 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold mb-2">Sacred Journey Transport Services</h3>
-            <p className="text-neutral-300">Your trusted partner for pilgrimage transport in Saudi Arabia</p>
-          </div>
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-neutral-400">
-            <p>© Ziyarah Travels Transport Services. All rights reserved.</p>
-            <div className="flex gap-4">
-              <span>Privacy Policy</span>
-              <span>•</span>
-              <span>Terms of Service</span>
-              <span>•</span>
-              <Link to="/contact" className="hover:text-gold transition-colors">Contact Us</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-
+      <Footer/>
       <WhatsAppButton />
     </main>
   );

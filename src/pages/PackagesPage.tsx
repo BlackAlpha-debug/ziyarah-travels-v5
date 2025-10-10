@@ -290,7 +290,7 @@ const CustomPackageCard = () => {
         </div>
 
         {/* Book Button */}
-        <Link to="/booking" className="block mt-2">
+        <Link to="/cab-booking" className="block mt-2">
           <Button
             className="w-full bg-gold hover:bg-gold-dark text-white"
             disabled={!selectedRoute || !selectedVehicle}

@@ -12,15 +12,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, MapPin, Phone, DollarSign, Mail, User, CheckCircle, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
-// ✅ Import EmailJS
+// ✅ Import EmailJS (only for optional "request received" email)
 import emailjs from "@emailjs/browser";
 emailjs.init("awvJIls7xVUtlL1yt");
-
-// ✅ WhatsApp API Credentials
-const PHONE_ID = "780619091801476";
-const TOKEN = "EAAYWCLCijuABPuTHBokaLTWnTilJ1BLWXD2H0J8ZBzMGomQqYPNKpQ7u8hnVZB8g5EmrzgC87RhUs6KfWErP3O1lFDZCqX8AoPzFsbQdZAO4AFkM2JsQOXLvaZBcnzsFKmZCxZCqakHbcmDmvvHcjSGx6ekqMWuKsZAr7foVM7w38J3ZBU99zZAWbb4I6QdfGvt9IenAZDZD";
 
 // ✅ Define routes with exact pricing per vehicle model
 const routes = [
@@ -112,7 +107,7 @@ const CabBookingPage = () => {
     preferredDate: null as Date | null,
     tripType: '',
     selectedRoute: '',
-    vehiclePreference: selectedCab // ✅ NOT disabled — user can change
+    vehiclePreference: selectedCab
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,84 +120,6 @@ const CabBookingPage = () => {
     const route = routes.find(r => r.name === routeName);
     if (!route) return 0;
     return route.prices[normalizedCab as keyof typeof route.prices] || 0;
-  };
-
-  const sendWhatsAppMessage = async (
-    to: string,
-    firstName: string,
-    bookingId: string,
-    vehicle: string,
-    category: string,
-    route: string,
-    tripType: string,
-    price: string,
-    preferredDate: string,
-    phone: string,
-    email: string
-  ) => {
-    const cleanPhone = to.replace(/\D/g, '');
-    const formattedTo = '+' + cleanPhone;
-
-    const url = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`;
-
-    const cleanText = (text: string) => {
-      return text
-        .replace(/[\n\r\t]/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-    };
-
-    const payload = {
-      messaging_product: "whatsapp",
-      to: formattedTo,
-      type: "template",
-      template: {
-        name: "cabbooking_confirmation",
-        language: { code: "en" },
-        components: [
-          {
-            type: "body",
-            parameters: [
-              { type: "text", text: cleanText(firstName) },           // {{1}}
-              { type: "text", text: cleanText(bookingId) },           // {{2}}
-              { type: "text", text: cleanText(vehicle) },             // {{3}}
-              { type: "text", text: cleanText(category) },            // {{4}}
-              { type: "text", text: cleanText(route) },               // {{5}}
-              { type: "text", text: cleanText(tripType) },            // {{6}}
-              { type: "text", text: cleanText(price) },               // {{7}} — numeric
-              { type: "text", text: cleanText(preferredDate) },       // {{8}}
-              { type: "text", text: cleanText(phone) },               // {{9}}
-              { type: "text", text: cleanText(email) }                // {{10}}
-            ]
-          }
-        ]
-      }
-    };
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const responseText = await response.text();
-      if (!response.ok) {
-        let errorData = { error: responseText };
-        try { errorData = JSON.parse(responseText); } catch {}
-        console.error("❌ WhatsApp API Error:", errorData);
-        throw new Error(`Failed: ${response.status}`);
-      }
-
-      const result = JSON.parse(responseText);
-      console.log("✅ WhatsApp sent:", result);
-      return result;
-    } catch (error) {
-      console.error("❌ WhatsApp failed:", error);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,23 +145,31 @@ const CabBookingPage = () => {
     const bookingId = `BT${new Date().getTime().toString().slice(-6)}`;
 
     try {
-      // ✅ Send WhatsApp
-      await sendWhatsAppMessage(
-        formData.phoneNumber,
-        formData.firstName,
-        bookingId,
-        formData.vehiclePreference,
-        customerTier,
-        formData.selectedRoute,
-        tripTypeLabel,
-        finalPrice,
-        formattedDate,
-        formData.phoneNumber,
-        formData.email
-      );
+      // ✅ OPTIONAL: Send a simple "request received" WhatsApp (not full confirmation)
+      // You can skip this if you prefer no initial message
+      const cleanPhone = formData.phoneNumber.replace(/\D/g, '');
+      const formattedTo = '+' + cleanPhone;
+      const url = `https://graph.facebook.com/v19.0/780619091801476/messages`;
+      await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer EAAYWCLCijuABPuTHBokaLTWnTilJ1BLWXD2H0J8ZBzMGomQqYPNKpQ7u8hnVZB8g5EmrzgC87RhUs6KfWErP3O1lFDZCqX8AoPzFsbQdZAO4AFkM2JsQOXLvaZBcnzsFKmZCxZCqakHbcmDmvvHcjSGx6ekqMWuKsZAr7foVM7w38J3ZBU99zZAWbb4I6QdfGvt9IenAZDZD`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedTo,
+          type: "template",
+          template: {
+            name: "booking_request_received", // ⚠️ You must create this template in WhatsApp Manager
+            language: { code: "en" },
+            components: [{ type: "body", parameters: [{ type: "text", text: formData.firstName }] }]
+          }
+        })
+      }).catch(console.error);
 
-      // ✅ Send Email (backup)
-      await emailjs.send("service_xbv79li", "template_opvt35m", {
+      // ✅ Save to localStorage as PENDING (no confirmation yet)
+      const newBooking = {
         booking_id: bookingId,
         vehicle: formData.vehiclePreference,
         route: formData.selectedRoute,
@@ -253,10 +178,16 @@ const CabBookingPage = () => {
         price: `${finalPrice} SAR`,
         phone: formData.phoneNumber,
         email: formData.email,
-        customer_name: `${formData.firstName} ${formData.lastName}`
-      });
+        customer_name: `${formData.firstName} ${formData.lastName}`,
+        category: customerTier,
+        status: "pending",
+        timestamp: new Date().toISOString(),
+      };
 
-      // ✅ Redirect
+      const existingBookings = JSON.parse(localStorage.getItem("ziyarah_bookings") || "[]");
+      localStorage.setItem("ziyarah_bookings", JSON.stringify([...existingBookings, newBooking]));
+
+      // ✅ Redirect to confirmation page (shows "Request Received")
       const urlParams = new URLSearchParams({
         vehicle: formData.vehiclePreference,
         route: formData.selectedRoute,
@@ -286,7 +217,7 @@ const CabBookingPage = () => {
 
     } catch (error) {
       console.error("Booking submission failed:", error);
-      alert("There was an issue processing your booking. Please try again or contact support.");
+      alert("There was an issue processing your booking. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
