@@ -1,6 +1,6 @@
 // Hardcoded credentials (for demo only)
 const ADMIN_CREDENTIALS = [
-  { username: "ziyarahadmin", password: "Ziyarah@2024!" }
+  { username: "ziyarahadmin", password: "Ziyarah@11" }
 ];
 
 export const authenticateAdmin = (username: string, password: string): boolean => {
